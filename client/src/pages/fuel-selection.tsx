@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { FUELS } from "@/lib/mock-data";
 import { useStore } from "@/lib/store";
 import { useLocation, useRoute } from "wouter";
-import { ChevronLeft, Droplets, Zap } from "lucide-react";
+import { ChevronLeft, Droplets, TrendingDown, Sparkles } from "lucide-react";
 
 export default function FuelSelectionScreen() {
   const [match, params] = useRoute("/station/:id");
@@ -57,9 +57,9 @@ export default function FuelSelectionScreen() {
           <button
             key={fuel.id}
             onClick={() => handleSelect(fuel)}
-            className="w-full glass-card p-5 rounded-xl flex items-center justify-between group active:scale-[0.99] transition-all hover:bg-white/5"
+            className="w-full glass-card p-5 rounded-xl flex items-center justify-between group active:scale-[0.99] transition-all hover:bg-white/5 relative overflow-hidden"
           >
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 relative z-10">
               <div className="w-12 h-12 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-300">
                 <Droplets className="w-6 h-6" />
               </div>
@@ -74,12 +74,16 @@ export default function FuelSelectionScreen() {
               </div>
             </div>
             
-            <div className="text-right">
+            <div className="text-right relative z-10">
               <div className="flex flex-col items-end">
-                <span className="text-[10px] text-gray-500 uppercase tracking-widest font-mono mb-1">Savings</span>
-                <span className="px-2 py-1 rounded bg-white/10 text-white font-bold text-xs border border-white/10">
-                  -{(fuel.basePrice - fuel.discountPrice).toFixed(2)}
-                </span>
+                <span className="text-[10px] text-gray-500 uppercase tracking-widest font-mono mb-1">Savings / L</span>
+                <div className="relative group/badge">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-primary to-emerald-400 rounded blur opacity-20 group-hover/badge:opacity-40 transition-opacity duration-500" />
+                  <span className="relative px-3 py-1.5 rounded bg-primary/10 text-primary font-bold text-sm border border-primary/50 flex items-center gap-1.5 shadow-[0_0_15px_rgba(var(--primary),0.2)]">
+                    <TrendingDown className="w-3 h-3" />
+                    -{(fuel.basePrice - fuel.discountPrice).toFixed(2)}
+                  </span>
+                </div>
               </div>
             </div>
           </button>

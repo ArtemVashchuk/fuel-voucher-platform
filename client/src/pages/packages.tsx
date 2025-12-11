@@ -2,7 +2,7 @@
 import { getPackagesForFuel } from "@/lib/mock-data";
 import { useStore } from "@/lib/store";
 import { useLocation } from "wouter";
-import { ChevronLeft, Zap, Box } from "lucide-react";
+import { ChevronLeft, Zap, Flame } from "lucide-react";
 
 export default function PackagesScreen() {
   const [, setLocation] = useLocation();
@@ -44,18 +44,21 @@ export default function PackagesScreen() {
             <button
               key={pkg.id}
               onClick={() => handleSelect(pkg)}
-              className="w-full group relative bg-card/40 hover:bg-card/60 rounded-xl p-6 border border-white/5 transition-all text-left overflow-hidden hover:border-primary/50"
+              className="w-full group relative bg-card/40 hover:bg-card/60 rounded-xl p-6 border border-white/5 transition-all text-left overflow-hidden hover:border-primary/50 hover:shadow-[0_0_30px_rgba(var(--primary),0.1)]"
             >
               {/* Tech Decoration */}
-              <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-white/5 to-transparent -mr-8 -mt-8 rotate-45" />
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-white/5 to-transparent -mr-8 -mt-8 rotate-45" />
               <div className="absolute bottom-0 left-0 w-1 h-full bg-primary/0 group-hover:bg-primary/100 transition-all duration-300" />
 
-              <div className="absolute top-4 right-4 bg-primary/20 border border-primary/20 text-primary text-[10px] font-bold px-2 py-1 rounded flex items-center gap-1 font-mono uppercase tracking-wider">
-                <Zap className="w-3 h-3 fill-current" />
-                Save {savings} ₴
+              {/* SAVINGS BADGE - EMPHASIZED */}
+              <div className="absolute top-0 right-0">
+                <div className="bg-primary text-black font-black text-xs px-4 py-2 rounded-bl-xl flex items-center gap-1.5 font-heading tracking-wider shadow-[0_0_20px_rgba(var(--primary),0.5)] group-hover:scale-105 transition-transform origin-top-right">
+                  <Flame className="w-3.5 h-3.5 fill-black animate-pulse" />
+                  SAVE {savings} ₴
+                </div>
               </div>
 
-              <div className="mb-6 relative z-10">
+              <div className="mb-6 relative z-10 pt-4">
                 <div className="flex items-baseline">
                   <span className="text-6xl font-black text-white tracking-tighter font-heading text-glow">
                     {pkg.liters}

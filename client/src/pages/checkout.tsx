@@ -1,7 +1,7 @@
 
 import { useStore } from "@/lib/store";
 import { useLocation } from "wouter";
-import { ChevronLeft, CreditCard, ShieldCheck, Cpu } from "lucide-react";
+import { ChevronLeft, CreditCard, ShieldCheck, Cpu, ArrowDown } from "lucide-react";
 import { useState } from "react";
 
 export default function CheckoutScreen() {
@@ -85,10 +85,16 @@ export default function CheckoutScreen() {
               <span>Standard Rate</span>
               <span className="line-through">{selectedPackage.originalPrice} ₴</span>
             </div>
-            <div className="flex justify-between text-primary font-medium text-sm font-mono">
-              <span>Discount Applied</span>
-              <span>- {(selectedPackage.originalPrice - selectedPackage.price)} ₴</span>
+            
+            {/* EMPHASIZED SAVINGS ROW */}
+            <div className="flex justify-between items-center text-black font-bold text-sm font-heading bg-primary/90 p-3 rounded shadow-[0_0_15px_rgba(var(--primary),0.3)] my-2">
+              <span className="flex items-center gap-2">
+                <span className="bg-black/20 p-1 rounded-full"><ArrowDown className="w-3 h-3" /></span>
+                DISCOUNT APPLIED
+              </span>
+              <span className="text-lg">- {(selectedPackage.originalPrice - selectedPackage.price)} ₴</span>
             </div>
+
             <div className="pt-4 border-t border-white/5 flex justify-between items-end">
               <span className="font-bold text-lg text-white font-heading">TOTAL</span>
               <span className="text-3xl font-black text-white tracking-tighter font-heading text-glow">{selectedPackage.price} ₴</span>
