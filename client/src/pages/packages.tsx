@@ -1,29 +1,58 @@
 
+import { useState } from "react";
 import { getPackagesForFuel } from "@/lib/mock-data";
 import { useStore } from "@/lib/store";
 import { useLocation } from "wouter";
-import { ChevronLeft, Zap, Flame, Skull, ArrowRight, TrendingDown } from "lucide-react";
+import { ChevronLeft, Zap, Flame, Skull, Minus, Plus, ShoppingCart, Check } from "lucide-react";
+import { toast } from "sonner";
 
 export default function PackagesScreen() {
   const [, setLocation] = useLocation();
-  const { selectedStation, selectedFuel, selectPackage } = useStore();
+  const { selectedStation, selectedFuel, addToCart, getCartItemCount } = useStore();
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [addedItems, setAddedItems] = useState<Set<string>>(new Set());
 
   if (!selectedStation || !selectedFuel) {
     return <div className="p-6 text-white">Missing selection data.</div>;
   }
 
   const packages = getPackagesForFuel(selectedFuel.id, selectedStation.id);
+  const cartCount = getCartItemCount();
 
-  const handleSelect = (pkg: typeof packages[0]) => {
-    selectPackage(pkg);
-    setLocation("/checkout");
+  const getQuantity = (pkgId: string) => quantities[pkgId] || 1;
+
+  const updateQuantity = (pkgId: string, delta: number) => {
+    setQuantities((prev) => ({
+      ...prev,
+      [pkgId]: Math.max(1, Math.min(99, (prev[pkgId] || 1) + delta)),
+    }));
+  };
+
+  const handleAddToCart = (pkg: typeof packages[0]) => {
+    const qty = getQuantity(pkg.id);
+    addToCart({
+      package: pkg,
+      station: selectedStation,
+      fuel: selectedFuel,
+      quantity: qty,
+    });
+    
+    setAddedItems((prev) => new Set(prev).add(pkg.id));
+    toast.success(`Added ${qty}x ${pkg.liters}L to cart`);
+    
+    setTimeout(() => {
+      setAddedItems((prev) => {
+        const next = new Set(prev);
+        next.delete(pkg.id);
+        return next;
+      });
+    }, 2000);
   };
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative">
       {/* Background effects */}
       <div className="absolute top-1/4 right-0 w-64 h-64 bg-primary/20 rounded-full blur-[120px]" />
-      <div className="absolute bottom-1/4 left-0 w-48 h-48 bg-red-500/10 rounded-full blur-[100px]" />
       
       <div className="bg-black/90 backdrop-blur-md p-6 pb-4 border-b-2 border-primary/30 z-10 sticky top-0">
         <div className="flex items-center gap-4">
@@ -41,85 +70,141 @@ export default function PackagesScreen() {
             </h2>
             <p className="text-xs text-red-400 font-mono tracking-[0.2em] uppercase mt-1 flex items-center gap-2">
               <Skull className="w-3 h-3" />
-              SELECT VOLUME
+              SELECT CARDS
             </p>
           </div>
+          
+          {/* Cart button */}
+          <button
+            onClick={() => setLocation("/basket")}
+            data-testid="button-cart"
+            className="relative p-3 bg-primary/20 border-2 border-primary/50 hover:bg-primary hover:text-black transition-all"
+          >
+            <ShoppingCart className="w-6 h-6 text-primary" />
+            {cartCount > 0 && (
+              <span className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(255,50,50,0.5)]">
+                {cartCount}
+              </span>
+            )}
+          </button>
         </div>
       </div>
 
       <div className="p-4 space-y-4 flex-1 relative z-10">
-        {packages.map((pkg, index) => {
+        {packages.map((pkg) => {
           const savings = pkg.originalPrice - pkg.price;
-          const isPopular = pkg.liters === 20;
+          const qty = getQuantity(pkg.id);
+          const totalPrice = pkg.price * qty;
+          const totalOriginal = pkg.originalPrice * qty;
+          const totalSavings = totalOriginal - totalPrice;
+          const isAdded = addedItems.has(pkg.id);
           
           return (
-            <button
+            <div
               key={pkg.id}
-              onClick={() => handleSelect(pkg)}
               data-testid={`package-${pkg.liters}L`}
-              className={`w-full group relative bg-black/80 border-2 ${isPopular ? 'border-primary animate-pulse-glow' : 'border-white/10 hover:border-primary'} p-0 transition-all text-left overflow-hidden hover:box-glow active:scale-[0.98]`}
+              className="bg-black/80 border-2 border-white/10 overflow-hidden"
             >
-              {/* MASSIVE SAVINGS BADGE */}
-              <div className="absolute top-0 right-0 z-20">
-                <div className={`${isPopular ? 'bg-red-500 text-white' : 'bg-primary text-black'} font-black text-sm px-5 py-2.5 flex items-center gap-2 font-heading tracking-wider ${isPopular ? 'shadow-[0_0_30px_rgba(255,50,50,0.6)]' : 'shadow-[0_0_20px_rgba(0,255,128,0.5)]'}`}>
-                  <Flame className={`w-4 h-4 ${isPopular ? 'animate-pulse' : ''}`} />
-                  SAVE {savings} ₴
+              {/* Header with savings */}
+              <div className="flex items-center justify-between p-4 border-b-2 border-white/10">
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 bg-primary/10 border-2 border-primary/30 flex flex-col items-center justify-center">
+                    <span className="text-4xl font-black text-white font-heading">{pkg.liters}</span>
+                    <span className="text-xs text-primary font-mono">LITERS</span>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-black text-white font-heading">{pkg.price} ₴</div>
+                    <div className="text-sm text-gray-500 line-through font-mono">{pkg.originalPrice} ₴</div>
+                  </div>
+                </div>
+                <div className="bg-primary text-black font-black text-sm px-4 py-2 flex items-center gap-2 font-heading shadow-[0_0_20px_rgba(0,255,128,0.5)]">
+                  <Flame className="w-4 h-4" />
+                  -{savings} ₴
                 </div>
               </div>
               
-              {isPopular && (
-                <div className="absolute top-0 left-0 bg-red-500 text-white text-[10px] font-black px-3 py-1 font-mono tracking-wider z-20">
-                  HOT DEAL
-                </div>
-              )}
-
-              <div className="flex items-stretch">
-                {/* Volume display */}
-                <div className="w-32 bg-primary/10 border-r-2 border-primary/30 flex flex-col items-center justify-center p-6 group-hover:bg-primary/20 transition-all">
-                  <span className="text-6xl font-black text-white tracking-tighter font-heading text-glow-intense">
-                    {pkg.liters}
-                  </span>
-                  <span className="text-xl font-bold text-primary font-mono">LITERS</span>
-                </div>
-                
-                {/* Pricing */}
-                <div className="flex-1 p-6 flex flex-col justify-center">
-                  <div className="flex items-end gap-3 mb-2">
-                    <span className="text-3xl font-black text-white font-heading tracking-tight">
-                      {pkg.price}
-                    </span>
-                    <span className="text-xl text-primary font-bold mb-0.5">₴</span>
-                    <span className="text-lg text-gray-600 line-through font-mono ml-2">
-                      {pkg.originalPrice} ₴
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center gap-4">
-                    <div className="text-xs text-gray-400 font-mono">
-                      <span className="text-gray-600">UNIT:</span> {(pkg.price / pkg.liters).toFixed(2)} ₴/L
-                    </div>
-                    <div className="flex items-center gap-1 text-primary text-xs font-bold">
-                      <TrendingDown className="w-3 h-3" />
-                      {Math.round((1 - pkg.price / pkg.originalPrice) * 100)}% OFF
-                    </div>
+              {/* Quantity selector and summary */}
+              <div className="p-4 space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400 font-mono text-sm uppercase tracking-wider">Quantity</span>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => updateQuantity(pkg.id, -1)}
+                      data-testid={`btn-minus-${pkg.id}`}
+                      className="w-10 h-10 bg-white/10 border-2 border-white/20 flex items-center justify-center hover:bg-red-500/20 hover:border-red-500 transition-all"
+                    >
+                      <Minus className="w-5 h-5 text-white" />
+                    </button>
+                    <span className="text-3xl font-black text-primary font-mono w-16 text-center">{qty}</span>
+                    <button
+                      onClick={() => updateQuantity(pkg.id, 1)}
+                      data-testid={`btn-plus-${pkg.id}`}
+                      className="w-10 h-10 bg-white/10 border-2 border-white/20 flex items-center justify-center hover:bg-primary/20 hover:border-primary transition-all"
+                    >
+                      <Plus className="w-5 h-5 text-white" />
+                    </button>
                   </div>
                 </div>
                 
-                {/* Arrow */}
-                <div className="w-16 bg-white/5 border-l-2 border-white/10 flex items-center justify-center group-hover:bg-primary group-hover:border-primary transition-all">
-                  <ArrowRight className="w-6 h-6 text-gray-400 group-hover:text-black" />
+                {/* Price summary */}
+                <div className="bg-white/5 border-2 border-white/10 p-4">
+                  <div className="flex justify-between text-sm text-gray-400 font-mono mb-2">
+                    <span>{qty}x {pkg.liters}L cards</span>
+                    <span className="text-gray-500 line-through">{totalOriginal} ₴</span>
+                  </div>
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <div className="text-[10px] text-gray-500 uppercase tracking-wider font-mono">Total Savings</div>
+                      <div className="text-primary font-black text-lg">{totalSavings} ₴</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[10px] text-gray-500 uppercase tracking-wider font-mono">Pay</div>
+                      <div className="text-white font-black text-3xl font-heading">{totalPrice} ₴</div>
+                    </div>
+                  </div>
                 </div>
+                
+                {/* Add to cart button */}
+                <button
+                  onClick={() => handleAddToCart(pkg)}
+                  data-testid={`btn-add-${pkg.id}`}
+                  disabled={isAdded}
+                  className={`w-full py-4 font-black text-lg flex items-center justify-center gap-3 transition-all font-heading tracking-wider uppercase ${
+                    isAdded 
+                      ? 'bg-green-500 text-white'
+                      : 'bg-primary text-black hover:shadow-[0_0_40px_rgba(0,255,128,0.5)]'
+                  }`}
+                >
+                  {isAdded ? (
+                    <>
+                      <Check className="w-6 h-6" />
+                      ADDED TO CART
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingCart className="w-6 h-6" />
+                      ADD TO CART
+                    </>
+                  )}
+                </button>
               </div>
-            </button>
+            </div>
           );
         })}
       </div>
       
-      <div className="p-4 border-t-2 border-white/10 bg-black/50">
-        <p className="text-center text-[10px] text-gray-600 font-mono tracking-[0.2em] uppercase">
-          [ PRICES LOCKED FOR 24H AFTER PURCHASE ]
-        </p>
-      </div>
+      {/* Floating cart summary */}
+      {cartCount > 0 && (
+        <div className="sticky bottom-24 mx-4 z-20">
+          <button
+            onClick={() => setLocation("/basket")}
+            className="w-full bg-primary text-black py-4 font-black text-lg flex items-center justify-center gap-3 shadow-[0_0_40px_rgba(0,255,128,0.5)] font-heading tracking-wider uppercase"
+          >
+            <ShoppingCart className="w-6 h-6" />
+            VIEW CART ({cartCount} items)
+          </button>
+        </div>
+      )}
     </div>
   );
 }
