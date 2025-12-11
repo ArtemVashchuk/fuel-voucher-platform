@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { Home, QrCode, ShoppingCart, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/lib/store";
+import { LanguageSelector } from "@/components/language-selector";
 import lionLogo from "@assets/generated_images/profile_cyberpunk_lion_logo.png";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -14,6 +15,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background flex flex-col max-w-md mx-auto shadow-2xl overflow-hidden relative border-x border-white/5">
+      {/* Language selector in top right */}
+      <div className="absolute top-4 right-4 z-50">
+        <LanguageSelector />
+      </div>
+      
       {/* Background lion logo watermark */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden max-w-md mx-auto">
         <img 

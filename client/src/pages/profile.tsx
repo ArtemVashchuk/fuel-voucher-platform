@@ -2,16 +2,18 @@
 import { useAuth } from "@/hooks/useAuth";
 import { User, LogIn, LogOut, Mail, Zap } from "lucide-react";
 import type { User as UserType } from "@shared/schema";
+import { useI18n } from "@/lib/i18n";
 
 export default function ProfileScreen() {
   const { user, isLoading, isAuthenticated } = useAuth();
+  const { t } = useI18n();
   
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-primary font-mono animate-pulse flex items-center gap-3">
           <Zap className="w-6 h-6 animate-spin" />
-          LOADING...
+          {t('common.loading')}
         </div>
       </div>
     );
@@ -28,10 +30,10 @@ export default function ProfileScreen() {
           </div>
           
           <h1 className="text-4xl font-black text-white font-heading uppercase mb-4">
-            ACCESS REQUIRED
+            {t('profile.accessRequired')}
           </h1>
           <p className="text-gray-400 font-mono text-sm mb-8 max-w-xs">
-            Sign in to access your profile and purchase history
+            {t('profile.signInDesc')}
           </p>
           
           <a
@@ -40,11 +42,11 @@ export default function ProfileScreen() {
             className="inline-flex items-center gap-3 bg-primary text-black px-8 py-4 font-black text-lg font-heading uppercase shadow-[0_0_40px_rgba(0,255,128,0.5)] hover:shadow-[0_0_60px_rgba(0,255,128,0.7)] transition-all"
           >
             <LogIn className="w-6 h-6" />
-            SIGN IN
+            {t('profile.signIn')}
           </a>
           
           <p className="text-[10px] text-gray-600 font-mono mt-6 uppercase tracking-wider">
-            Google • Apple • GitHub • Email
+            {t('profile.authMethods')}
           </p>
         </div>
       </div>
@@ -58,9 +60,9 @@ export default function ProfileScreen() {
       <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[100px]" />
       
       <header className="relative z-10 mb-8">
-        <h1 className="text-4xl font-black text-white font-heading uppercase">PROFILE</h1>
+        <h1 className="text-4xl font-black text-white font-heading uppercase">{t('profile.title')}</h1>
         <p className="text-xs text-primary font-mono tracking-[0.2em] uppercase mt-1">
-          OPERATOR STATUS: ACTIVE
+          {t('profile.subtitle')}
         </p>
       </header>
       
@@ -104,7 +106,7 @@ export default function ProfileScreen() {
           className="w-full bg-red-500/20 border-2 border-red-500/50 text-red-400 py-4 font-black text-lg flex items-center justify-center gap-3 font-heading uppercase hover:bg-red-500 hover:text-white transition-all"
         >
           <LogOut className="w-6 h-6" />
-          SIGN OUT
+          {t('profile.signOut')}
         </a>
       </div>
     </div>

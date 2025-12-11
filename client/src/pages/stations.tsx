@@ -4,10 +4,12 @@ import { useStore } from "@/lib/store";
 import { useLocation } from "wouter";
 import { ArrowRight, Zap, Skull, AlertTriangle } from "lucide-react";
 import lionLogo from "@assets/generated_images/profile_cyberpunk_lion_logo.png";
+import { useI18n } from "@/lib/i18n";
 
 export default function StationsScreen() {
   const [, setLocation] = useLocation();
   const selectStation = useStore((state) => state.selectStation);
+  const { t } = useI18n();
 
   const handleSelect = (station: typeof STATIONS[0]) => {
     selectStation(station);

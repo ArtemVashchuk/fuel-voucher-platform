@@ -1,0 +1,371 @@
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+export type Language = 'en' | 'uk' | 'de' | 'es';
+
+export const languages: { code: Language; name: string; flag: string }[] = [
+  { code: 'en', name: 'English', flag: '🇬🇧' },
+  { code: 'uk', name: 'Українська', flag: '🇺🇦' },
+  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+];
+
+const translations: Record<Language, Record<string, string>> = {
+  en: {
+    // Navigation
+    'nav.stations': 'STATIONS',
+    'nav.basket': 'BASKET',
+    'nav.codes': 'MY CODES',
+    'nav.profile': 'PROFILE',
+    
+    // Stations
+    'stations.title': 'SELECT STATION',
+    'stations.subtitle': 'FUEL NETWORK ACCESS',
+    'stations.savings': 'SAVE UP TO',
+    
+    // Fuel Selection
+    'fuel.title': 'SELECT FUEL',
+    'fuel.subtitle': 'FUEL TYPE SELECTION',
+    'fuel.gasoline': 'Gasoline',
+    'fuel.diesel': 'Diesel',
+    'fuel.lpg': 'LPG',
+    
+    // Packages
+    'packages.title': 'SELECT PACKAGE',
+    'packages.subtitle': 'VOLUME OPTIONS',
+    'packages.liters': 'liters',
+    'packages.save': 'SAVE',
+    'packages.addToCart': 'ADD TO CART',
+    'packages.quantity': 'QUANTITY',
+    'packages.perCard': 'per card',
+    'packages.total': 'TOTAL',
+    
+    // Basket
+    'basket.title': 'YOUR BASKET',
+    'basket.subtitle': 'SELECTED ITEMS',
+    'basket.empty': 'Your basket is empty',
+    'basket.browseStations': 'Browse Stations',
+    'basket.remove': 'Remove',
+    'basket.promocode': 'PROMOCODE',
+    'basket.enterCode': 'Enter code',
+    'basket.apply': 'APPLY',
+    'basket.subtotal': 'Subtotal',
+    'basket.discount': 'Discount',
+    'basket.totalToPay': 'TOTAL TO PAY',
+    'basket.checkout': 'PROCEED TO CHECKOUT',
+    'basket.cards': 'cards',
+    
+    // Checkout
+    'checkout.title': 'PAYMENT',
+    'checkout.orderSummary': 'ORDER SUMMARY',
+    'checkout.paymentMethod': 'PAYMENT METHOD',
+    'checkout.card': 'Card',
+    'checkout.securePayment': 'Secure Payment',
+    'checkout.confirmPay': 'CONFIRM & PAY',
+    'checkout.processing': 'PROCESSING...',
+    'checkout.accessDenied': 'ACCESS DENIED',
+    'checkout.signInRequired': 'Sign in to complete your purchase',
+    
+    // Success
+    'success.title': 'PURCHASE COMPLETE',
+    'success.subtitle': 'Your fuel codes are ready',
+    'success.viewCodes': 'VIEW MY CODES',
+    'success.backHome': 'BACK TO HOME',
+    
+    // My Codes
+    'codes.title': 'MY FUEL CODES',
+    'codes.subtitle': 'REDEEMABLE QR CODES',
+    'codes.empty': 'No codes yet',
+    'codes.emptyDesc': 'Purchase fuel packages to get QR codes',
+    'codes.showQr': 'SHOW QR',
+    'codes.copy': 'COPY',
+    
+    // Profile
+    'profile.title': 'PROFILE',
+    'profile.subtitle': 'OPERATOR STATUS: ACTIVE',
+    'profile.accessRequired': 'ACCESS REQUIRED',
+    'profile.signInDesc': 'Sign in to access your profile and purchase history',
+    'profile.signIn': 'SIGN IN',
+    'profile.signOut': 'SIGN OUT',
+    'profile.authMethods': 'Google • Apple • GitHub • Email',
+    
+    // Common
+    'common.loading': 'LOADING...',
+    'common.back': 'Back',
+    'common.uah': 'UAH',
+  },
+  
+  uk: {
+    // Navigation
+    'nav.stations': 'СТАНЦІЇ',
+    'nav.basket': 'КОШИК',
+    'nav.codes': 'МОЇ КОДИ',
+    'nav.profile': 'ПРОФІЛЬ',
+    
+    // Stations
+    'stations.title': 'ОБЕРІТЬ СТАНЦІЮ',
+    'stations.subtitle': 'ДОСТУП ДО МЕРЕЖІ АЗС',
+    'stations.savings': 'ЕКОНОМІЯ ДО',
+    
+    // Fuel Selection
+    'fuel.title': 'ОБЕРІТЬ ПАЛИВО',
+    'fuel.subtitle': 'ТИП ПАЛИВА',
+    'fuel.gasoline': 'Бензин',
+    'fuel.diesel': 'Дизель',
+    'fuel.lpg': 'Газ',
+    
+    // Packages
+    'packages.title': 'ОБЕРІТЬ ПАКЕТ',
+    'packages.subtitle': "ВАРІАНТИ ОБ'ЄМУ",
+    'packages.liters': 'літрів',
+    'packages.save': 'ЕКОНОМІЯ',
+    'packages.addToCart': 'ДОДАТИ В КОШИК',
+    'packages.quantity': 'КІЛЬКІСТЬ',
+    'packages.perCard': 'за картку',
+    'packages.total': 'РАЗОМ',
+    
+    // Basket
+    'basket.title': 'ВАШ КОШИК',
+    'basket.subtitle': 'ОБРАНІ ТОВАРИ',
+    'basket.empty': 'Ваш кошик порожній',
+    'basket.browseStations': 'Переглянути станції',
+    'basket.remove': 'Видалити',
+    'basket.promocode': 'ПРОМОКОД',
+    'basket.enterCode': 'Введіть код',
+    'basket.apply': 'ЗАСТОСУВАТИ',
+    'basket.subtotal': 'Підсумок',
+    'basket.discount': 'Знижка',
+    'basket.totalToPay': 'ДО СПЛАТИ',
+    'basket.checkout': 'ОФОРМИТИ ЗАМОВЛЕННЯ',
+    'basket.cards': 'карток',
+    
+    // Checkout
+    'checkout.title': 'ОПЛАТА',
+    'checkout.orderSummary': 'ДЕТАЛІ ЗАМОВЛЕННЯ',
+    'checkout.paymentMethod': 'СПОСІБ ОПЛАТИ',
+    'checkout.card': 'Картка',
+    'checkout.securePayment': 'Безпечна оплата',
+    'checkout.confirmPay': 'ПІДТВЕРДИТИ І ОПЛАТИТИ',
+    'checkout.processing': 'ОБРОБКА...',
+    'checkout.accessDenied': 'ДОСТУП ЗАБОРОНЕНО',
+    'checkout.signInRequired': 'Увійдіть для завершення покупки',
+    
+    // Success
+    'success.title': 'ПОКУПКУ ЗАВЕРШЕНО',
+    'success.subtitle': 'Ваші паливні коди готові',
+    'success.viewCodes': 'ПЕРЕГЛЯНУТИ КОДИ',
+    'success.backHome': 'НА ГОЛОВНУ',
+    
+    // My Codes
+    'codes.title': 'МОЇ ПАЛИВНІ КОДИ',
+    'codes.subtitle': 'QR-КОДИ ДЛЯ ВИКОРИСТАННЯ',
+    'codes.empty': 'Кодів поки немає',
+    'codes.emptyDesc': 'Придбайте паливні пакети для отримання QR-кодів',
+    'codes.showQr': 'ПОКАЗАТИ QR',
+    'codes.copy': 'КОПІЮВАТИ',
+    
+    // Profile
+    'profile.title': 'ПРОФІЛЬ',
+    'profile.subtitle': 'СТАТУС ОПЕРАТОРА: АКТИВНИЙ',
+    'profile.accessRequired': 'ПОТРІБНА АВТОРИЗАЦІЯ',
+    'profile.signInDesc': 'Увійдіть для доступу до профілю та історії покупок',
+    'profile.signIn': 'УВІЙТИ',
+    'profile.signOut': 'ВИЙТИ',
+    'profile.authMethods': 'Google • Apple • GitHub • Email',
+    
+    // Common
+    'common.loading': 'ЗАВАНТАЖЕННЯ...',
+    'common.back': 'Назад',
+    'common.uah': 'ГРН',
+  },
+  
+  de: {
+    // Navigation
+    'nav.stations': 'STATIONEN',
+    'nav.basket': 'WARENKORB',
+    'nav.codes': 'MEINE CODES',
+    'nav.profile': 'PROFIL',
+    
+    // Stations
+    'stations.title': 'STATION WÄHLEN',
+    'stations.subtitle': 'TANKSTELLENNETZ-ZUGANG',
+    'stations.savings': 'SPAREN SIE BIS ZU',
+    
+    // Fuel Selection
+    'fuel.title': 'KRAFTSTOFF WÄHLEN',
+    'fuel.subtitle': 'KRAFTSTOFFART',
+    'fuel.gasoline': 'Benzin',
+    'fuel.diesel': 'Diesel',
+    'fuel.lpg': 'Autogas',
+    
+    // Packages
+    'packages.title': 'PAKET WÄHLEN',
+    'packages.subtitle': 'VOLUMENOPTIONEN',
+    'packages.liters': 'Liter',
+    'packages.save': 'SPAREN',
+    'packages.addToCart': 'IN DEN WARENKORB',
+    'packages.quantity': 'MENGE',
+    'packages.perCard': 'pro Karte',
+    'packages.total': 'GESAMT',
+    
+    // Basket
+    'basket.title': 'IHR WARENKORB',
+    'basket.subtitle': 'AUSGEWÄHLTE ARTIKEL',
+    'basket.empty': 'Ihr Warenkorb ist leer',
+    'basket.browseStations': 'Stationen durchsuchen',
+    'basket.remove': 'Entfernen',
+    'basket.promocode': 'GUTSCHEINCODE',
+    'basket.enterCode': 'Code eingeben',
+    'basket.apply': 'ANWENDEN',
+    'basket.subtotal': 'Zwischensumme',
+    'basket.discount': 'Rabatt',
+    'basket.totalToPay': 'GESAMTBETRAG',
+    'basket.checkout': 'ZUR KASSE',
+    'basket.cards': 'Karten',
+    
+    // Checkout
+    'checkout.title': 'ZAHLUNG',
+    'checkout.orderSummary': 'BESTELLÜBERSICHT',
+    'checkout.paymentMethod': 'ZAHLUNGSMETHODE',
+    'checkout.card': 'Karte',
+    'checkout.securePayment': 'Sichere Zahlung',
+    'checkout.confirmPay': 'BESTÄTIGEN & BEZAHLEN',
+    'checkout.processing': 'VERARBEITUNG...',
+    'checkout.accessDenied': 'ZUGANG VERWEIGERT',
+    'checkout.signInRequired': 'Melden Sie sich an, um Ihren Kauf abzuschließen',
+    
+    // Success
+    'success.title': 'KAUF ABGESCHLOSSEN',
+    'success.subtitle': 'Ihre Kraftstoff-Codes sind bereit',
+    'success.viewCodes': 'MEINE CODES ANZEIGEN',
+    'success.backHome': 'ZURÜCK ZUR STARTSEITE',
+    
+    // My Codes
+    'codes.title': 'MEINE KRAFTSTOFF-CODES',
+    'codes.subtitle': 'EINLÖSBARE QR-CODES',
+    'codes.empty': 'Noch keine Codes',
+    'codes.emptyDesc': 'Kaufen Sie Kraftstoffpakete, um QR-Codes zu erhalten',
+    'codes.showQr': 'QR ANZEIGEN',
+    'codes.copy': 'KOPIEREN',
+    
+    // Profile
+    'profile.title': 'PROFIL',
+    'profile.subtitle': 'OPERATORSTATUS: AKTIV',
+    'profile.accessRequired': 'ZUGANG ERFORDERLICH',
+    'profile.signInDesc': 'Melden Sie sich an, um auf Ihr Profil und Ihre Kaufhistorie zuzugreifen',
+    'profile.signIn': 'ANMELDEN',
+    'profile.signOut': 'ABMELDEN',
+    'profile.authMethods': 'Google • Apple • GitHub • E-Mail',
+    
+    // Common
+    'common.loading': 'LADEN...',
+    'common.back': 'Zurück',
+    'common.uah': 'UAH',
+  },
+  
+  es: {
+    // Navigation
+    'nav.stations': 'ESTACIONES',
+    'nav.basket': 'CESTA',
+    'nav.codes': 'MIS CÓDIGOS',
+    'nav.profile': 'PERFIL',
+    
+    // Stations
+    'stations.title': 'SELECCIONAR ESTACIÓN',
+    'stations.subtitle': 'ACCESO A RED DE COMBUSTIBLE',
+    'stations.savings': 'AHORRA HASTA',
+    
+    // Fuel Selection
+    'fuel.title': 'SELECCIONAR COMBUSTIBLE',
+    'fuel.subtitle': 'TIPO DE COMBUSTIBLE',
+    'fuel.gasoline': 'Gasolina',
+    'fuel.diesel': 'Diésel',
+    'fuel.lpg': 'GLP',
+    
+    // Packages
+    'packages.title': 'SELECCIONAR PAQUETE',
+    'packages.subtitle': 'OPCIONES DE VOLUMEN',
+    'packages.liters': 'litros',
+    'packages.save': 'AHORRA',
+    'packages.addToCart': 'AÑADIR AL CARRITO',
+    'packages.quantity': 'CANTIDAD',
+    'packages.perCard': 'por tarjeta',
+    'packages.total': 'TOTAL',
+    
+    // Basket
+    'basket.title': 'TU CESTA',
+    'basket.subtitle': 'ARTÍCULOS SELECCIONADOS',
+    'basket.empty': 'Tu cesta está vacía',
+    'basket.browseStations': 'Ver estaciones',
+    'basket.remove': 'Eliminar',
+    'basket.promocode': 'CÓDIGO PROMOCIONAL',
+    'basket.enterCode': 'Introducir código',
+    'basket.apply': 'APLICAR',
+    'basket.subtotal': 'Subtotal',
+    'basket.discount': 'Descuento',
+    'basket.totalToPay': 'TOTAL A PAGAR',
+    'basket.checkout': 'PROCEDER AL PAGO',
+    'basket.cards': 'tarjetas',
+    
+    // Checkout
+    'checkout.title': 'PAGO',
+    'checkout.orderSummary': 'RESUMEN DEL PEDIDO',
+    'checkout.paymentMethod': 'MÉTODO DE PAGO',
+    'checkout.card': 'Tarjeta',
+    'checkout.securePayment': 'Pago seguro',
+    'checkout.confirmPay': 'CONFIRMAR Y PAGAR',
+    'checkout.processing': 'PROCESANDO...',
+    'checkout.accessDenied': 'ACCESO DENEGADO',
+    'checkout.signInRequired': 'Inicia sesión para completar tu compra',
+    
+    // Success
+    'success.title': 'COMPRA COMPLETADA',
+    'success.subtitle': 'Tus códigos de combustible están listos',
+    'success.viewCodes': 'VER MIS CÓDIGOS',
+    'success.backHome': 'VOLVER AL INICIO',
+    
+    // My Codes
+    'codes.title': 'MIS CÓDIGOS DE COMBUSTIBLE',
+    'codes.subtitle': 'CÓDIGOS QR CANJEABLES',
+    'codes.empty': 'Sin códigos aún',
+    'codes.emptyDesc': 'Compra paquetes de combustible para obtener códigos QR',
+    'codes.showQr': 'MOSTRAR QR',
+    'codes.copy': 'COPIAR',
+    
+    // Profile
+    'profile.title': 'PERFIL',
+    'profile.subtitle': 'ESTADO DEL OPERADOR: ACTIVO',
+    'profile.accessRequired': 'ACCESO REQUERIDO',
+    'profile.signInDesc': 'Inicia sesión para acceder a tu perfil e historial de compras',
+    'profile.signIn': 'INICIAR SESIÓN',
+    'profile.signOut': 'CERRAR SESIÓN',
+    'profile.authMethods': 'Google • Apple • GitHub • Correo',
+    
+    // Common
+    'common.loading': 'CARGANDO...',
+    'common.back': 'Atrás',
+    'common.uah': 'UAH',
+  },
+};
+
+interface I18nStore {
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  t: (key: string) => string;
+}
+
+export const useI18n = create<I18nStore>()(
+  persist(
+    (set, get) => ({
+      language: 'en',
+      setLanguage: (lang) => set({ language: lang }),
+      t: (key: string) => {
+        const lang = get().language;
+        return translations[lang][key] || translations['en'][key] || key;
+      },
+    }),
+    {
+      name: 'lemberg-language',
+    }
+  )
+);

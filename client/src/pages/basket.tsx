@@ -4,9 +4,11 @@ import { useStore } from "@/lib/store";
 import { useLocation } from "wouter";
 import { ChevronLeft, Minus, Plus, Trash2, Tag, Zap, ShoppingCart, X, Check, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
+import { useI18n } from "@/lib/i18n";
 
 export default function BasketScreen() {
   const [, setLocation] = useLocation();
+  const { t } = useI18n();
   const { 
     cart, 
     updateQuantity, 
@@ -48,18 +50,18 @@ export default function BasketScreen() {
           >
             <ChevronLeft className="w-6 h-6 text-white" />
           </button>
-          <h1 className="font-black text-xl text-white font-heading tracking-wider uppercase">CART</h1>
+          <h1 className="font-black text-xl text-white font-heading tracking-wider uppercase">{t('basket.title')}</h1>
         </div>
         
         <div className="flex-1 flex flex-col items-center justify-center p-8">
           <ShoppingCart className="w-20 h-20 text-gray-700 mb-4" />
-          <h2 className="text-2xl font-black text-white font-heading uppercase mb-2">CART IS EMPTY</h2>
-          <p className="text-gray-500 font-mono text-sm mb-8">Add fuel cards to get started</p>
+          <h2 className="text-2xl font-black text-white font-heading uppercase mb-2">{t('basket.empty')}</h2>
+          <p className="text-gray-500 font-mono text-sm mb-8">{t('basket.browseStations')}</p>
           <button
             onClick={() => setLocation("/")}
             className="bg-primary text-black px-8 py-4 font-black text-lg font-heading uppercase"
           >
-            BROWSE STATIONS
+            {t('basket.browseStations')}
           </button>
         </div>
       </div>
@@ -81,18 +83,18 @@ export default function BasketScreen() {
         <div className="flex-1">
           <h1 className="font-black text-xl text-white font-heading tracking-wider uppercase flex items-center gap-2">
             <ShoppingCart className="w-5 h-5 text-primary" />
-            CART
+            {t('basket.title')}
           </h1>
-          <p className="text-xs text-gray-400 font-mono">{cart.length} item(s)</p>
+          <p className="text-xs text-gray-400 font-mono">{cart.length} {t('basket.cards')}</p>
         </div>
         <button
           onClick={() => {
             clearCart();
-            toast.success("Cart cleared");
+            toast.success(t('basket.empty'));
           }}
           className="text-red-500 text-xs font-mono uppercase tracking-wider hover:text-red-400 transition-colors"
         >
-          Clear All
+          {t('basket.remove')}
         </button>
       </div>
 
@@ -153,7 +155,7 @@ export default function BasketScreen() {
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-xs text-gray-400 font-mono uppercase tracking-wider">
             <Tag className="w-4 h-4 text-primary" />
-            PROMOCODE
+            {t('basket.promocode')}
           </div>
           
           {promocode ? (
@@ -179,7 +181,7 @@ export default function BasketScreen() {
                   setPromoInput(e.target.value);
                   setPromoError(false);
                 }}
-                placeholder="Enter code..."
+                placeholder={t('basket.enterCode')}
                 data-testid="input-promocode"
                 className={`flex-1 bg-black/50 border-2 ${promoError ? 'border-red-500' : 'border-white/20'} px-4 py-3 text-white font-mono uppercase tracking-wider focus:border-primary focus:outline-none`}
               />
@@ -188,7 +190,7 @@ export default function BasketScreen() {
                 disabled={!promoInput}
                 className="bg-primary/20 border-2 border-primary/50 px-6 font-black text-primary hover:bg-primary hover:text-black transition-all disabled:opacity-50"
               >
-                APPLY
+                {t('basket.apply')}
               </button>
             </div>
           )}
@@ -197,19 +199,19 @@ export default function BasketScreen() {
         {/* Price summary */}
         <div className="space-y-2 border-t-2 border-white/10 pt-4">
           <div className="flex justify-between text-gray-400 font-mono text-sm">
-            <span>Subtotal</span>
+            <span>{t('basket.subtotal')}</span>
             <span>{total} ₴</span>
           </div>
           
           {discount > 0 && (
             <div className="flex justify-between text-primary font-mono text-sm">
-              <span>Discount ({discount}%)</span>
+              <span>{t('basket.discount')} ({discount}%)</span>
               <span>-{discountAmount} ₴</span>
             </div>
           )}
           
           <div className="flex justify-between items-end pt-2">
-            <span className="font-black text-white text-lg font-heading uppercase">TOTAL</span>
+            <span className="font-black text-white text-lg font-heading uppercase">{t('basket.totalToPay')}</span>
             <span className="text-4xl font-black text-white font-heading text-glow">{discountedTotal} ₴</span>
           </div>
         </div>
@@ -221,7 +223,7 @@ export default function BasketScreen() {
           className="w-full bg-primary text-black py-5 font-black text-xl flex items-center justify-center gap-3 shadow-[0_0_40px_rgba(0,255,128,0.5)] font-heading tracking-wider uppercase active:scale-[0.98] transition-all"
         >
           <Zap className="w-6 h-6" />
-          PROCEED TO PAYMENT
+          {t('basket.checkout')}
         </button>
       </div>
     </div>
