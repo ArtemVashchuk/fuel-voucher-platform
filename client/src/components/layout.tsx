@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { Home, QrCode, ShoppingCart, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/lib/store";
+import lionLogo from "@assets/generated_images/profile_cyberpunk_lion_logo.png";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -13,7 +14,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background flex flex-col max-w-md mx-auto shadow-2xl overflow-hidden relative border-x border-white/5">
-      <main className="flex-1 overflow-y-auto pb-24 no-scrollbar">
+      {/* Background lion logo watermark */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden max-w-md mx-auto">
+        <img 
+          src={lionLogo} 
+          alt="" 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] object-contain opacity-[0.03] saturate-0 contrast-200"
+        />
+        <div className="absolute bottom-0 right-0 w-64 h-64 opacity-[0.05]">
+          <img src={lionLogo} alt="" className="w-full h-full object-contain saturate-0" />
+        </div>
+      </div>
+      
+      <main className="flex-1 overflow-y-auto pb-24 no-scrollbar relative z-10">
         {children}
       </main>
 
