@@ -2,7 +2,7 @@
 import { STATIONS } from "@/lib/mock-data";
 import { useStore } from "@/lib/store";
 import { useLocation } from "wouter";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Zap } from "lucide-react";
 
 export default function StationsScreen() {
   const [, setLocation] = useLocation();
@@ -15,11 +15,15 @@ export default function StationsScreen() {
 
   return (
     <div className="p-6 pt-12 space-y-8">
-      <header>
-        <h1 className="text-3xl font-bold text-gray-900 leading-tight">
-          Choose your<br />filling station
+      <header className="relative">
+        <div className="absolute -left-10 -top-10 w-32 h-32 bg-primary/20 rounded-full blur-3xl" />
+        <h1 className="text-4xl font-bold text-white leading-none tracking-tighter relative z-10">
+          SELECT<br />
+          <span className="text-primary text-glow">NETWORK</span>
         </h1>
-        <p className="text-gray-500 mt-2">Select a partner network to see prices</p>
+        <p className="text-gray-400 mt-2 font-mono text-xs tracking-widest uppercase relative z-10">
+          // Authorized Partners Only
+        </p>
       </header>
 
       <div className="grid grid-cols-1 gap-4">
@@ -27,22 +31,32 @@ export default function StationsScreen() {
           <button
             key={station.id}
             onClick={() => handleSelect(station)}
-            className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-sm border border-gray-100 transition-all active:scale-[0.98] hover:shadow-md text-left flex items-center justify-between"
+            className="group relative overflow-hidden rounded-xl bg-card border border-white/5 p-6 transition-all duration-300 hover:border-primary/50 hover:shadow-[0_0_20px_rgba(var(--primary),0.15)] text-left flex items-center justify-between"
           >
-            <div className={`absolute left-0 top-0 bottom-0 w-2 ${station.color}`} />
+            {/* Background Gradient */}
+            <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 bg-gradient-to-r ${
+               station.id === 'okko' ? 'from-green-500 to-transparent' :
+               station.id === 'wog' ? 'from-green-400 to-transparent' :
+               station.id === 'upg' ? 'from-emerald-500 to-transparent' :
+               'from-yellow-500 to-transparent'
+            }`} />
             
-            <div className="pl-4">
-              <span className={`text-2xl font-black tracking-tighter ${
-                station.id === 'okko' ? 'text-green-600' :
-                station.id === 'wog' ? 'text-green-500' :
-                station.id === 'upg' ? 'text-emerald-500' :
-                'text-yellow-500'
+            <div className="relative z-10 pl-2">
+              <span className={`text-3xl font-black tracking-tighter uppercase font-heading ${
+                station.id === 'okko' ? 'text-green-500' :
+                station.id === 'wog' ? 'text-green-400' :
+                station.id === 'upg' ? 'text-emerald-400' :
+                'text-yellow-400'
               }`}>
                 {station.logoText}
               </span>
+              <div className="flex items-center gap-1 mt-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-[10px] text-gray-500 font-mono uppercase tracking-wider">Online</span>
+              </div>
             </div>
 
-            <div className="bg-gray-50 p-2 rounded-full text-gray-400 group-hover:text-primary group-hover:bg-primary/10 transition-colors">
+            <div className="relative z-10 bg-white/5 p-3 rounded-lg text-gray-400 group-hover:text-primary group-hover:bg-primary/10 transition-colors border border-white/5 group-hover:border-primary/30">
               <ArrowRight className="w-5 h-5" />
             </div>
           </button>

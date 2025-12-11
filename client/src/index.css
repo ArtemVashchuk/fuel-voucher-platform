@@ -33,62 +33,63 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --font-sans: 'Inter', sans-serif;
-  --font-heading: 'Barlow', sans-serif;
+  --font-heading: 'Rajdhani', sans-serif;
 }
 
 :root {
-  --background: 210 20% 98%;
-  --foreground: 222.2 84% 4.9%;
-  --card: 0 0% 100%;
-  --card-foreground: 222.2 84% 4.9%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 222.2 84% 4.9%;
-  --primary: 142 76% 36%; /* Fuel Green */
-  --primary-foreground: 355.7 100% 97.3%;
-  --secondary: 210 40% 96.1%;
-  --secondary-foreground: 222.2 47.4% 11.2%;
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 215.4 16.3% 46.9%;
-  --accent: 210 40% 96.1%;
-  --accent-foreground: 222.2 47.4% 11.2%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 142 76% 36%;
-  --radius: 0.75rem;
-  --chart-1: 12 76% 61%;
-  --chart-2: 173 58% 39%;
-  --chart-3: 197 37% 24%;
-  --chart-4: 43 74% 66%;
-  --chart-5: 27 87% 67%;
+  /* Default to Dark/Future settings even in root if we force dark class */
+  --background: 220 40% 4%; /* Deep dark blue-black */
+  --foreground: 210 20% 98%;
+  
+  --card: 220 30% 8%;
+  --card-foreground: 210 20% 98%;
+  
+  --popover: 220 30% 8%;
+  --popover-foreground: 210 20% 98%;
+  
+  --primary: 160 100% 50%; /* Neon Green */
+  --primary-foreground: 220 40% 4%;
+  
+  --secondary: 215 25% 15%;
+  --secondary-foreground: 210 20% 98%;
+  
+  --muted: 215 25% 15%;
+  --muted-foreground: 215 20% 65%;
+  
+  --accent: 190 100% 50%; /* Cyan accent */
+  --accent-foreground: 220 40% 4%;
+  
+  --destructive: 0 100% 60%;
+  --destructive-foreground: 210 20% 98%;
+  
+  --border: 215 25% 15%;
+  --input: 215 25% 15%;
+  --ring: 160 100% 50%;
+  
+  --radius: 0.25rem; /* Sharper corners for tech look */
 }
 
+/* Force dark mode variables everywhere since we want a specific look */
 .dark {
-  --background: 222.2 84% 4.9%;
-  --foreground: 210 40% 98%;
-  --card: 222.2 84% 4.9%;
-  --card-foreground: 210 40% 98%;
-  --popover: 222.2 84% 4.9%;
-  --popover-foreground: 210 40% 98%;
-  --primary: 142 70% 50%;
-  --primary-foreground: 222.2 47.4% 11.2%;
-  --secondary: 217.2 32.6% 17.5%;
-  --secondary-foreground: 210 40% 98%;
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
-  --accent: 217.2 32.6% 17.5%;
-  --accent-foreground: 210 40% 98%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 217.2 32.6% 17.5%;
-  --input: 217.2 32.6% 17.5%;
-  --ring: 142 70% 50%;
-  --chart-1: 220 70% 50%;
-  --chart-2: 160 60% 45%;
-  --chart-3: 30 80% 55%;
-  --chart-4: 280 65% 60%;
-  --chart-5: 340 75% 55%;
+  --background: 220 40% 4%;
+  --foreground: 210 20% 98%;
+  --card: 220 30% 8%;
+  --card-foreground: 210 20% 98%;
+  --popover: 220 30% 8%;
+  --popover-foreground: 210 20% 98%;
+  --primary: 160 100% 50%;
+  --primary-foreground: 220 40% 4%;
+  --secondary: 215 25% 15%;
+  --secondary-foreground: 210 20% 98%;
+  --muted: 215 25% 15%;
+  --muted-foreground: 215 20% 65%;
+  --accent: 190 100% 50%;
+  --accent-foreground: 220 40% 4%;
+  --destructive: 0 100% 60%;
+  --destructive-foreground: 210 20% 98%;
+  --border: 215 25% 20%;
+  --input: 215 25% 20%;
+  --ring: 160 100% 50%;
 }
 
 @layer base {
@@ -97,8 +98,31 @@
   }
   body {
     @apply font-sans antialiased bg-background text-foreground;
+    background-image: 
+      linear-gradient(rgba(10, 15, 30, 0.9), rgba(10, 15, 30, 0.9)),
+      linear-gradient(0deg, transparent 24%, rgba(255, 255, 255, .03) 25%, rgba(255, 255, 255, .03) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .03) 75%, rgba(255, 255, 255, .03) 76%, transparent 77%, transparent),
+      linear-gradient(90deg, transparent 24%, rgba(255, 255, 255, .03) 25%, rgba(255, 255, 255, .03) 26%, transparent 27%, transparent 74%, rgba(255, 255, 255, .03) 75%, rgba(255, 255, 255, .03) 76%, transparent 77%, transparent);
+    background-size: 100% 100%, 50px 50px, 50px 50px;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-heading font-semibold tracking-tight;
+    @apply font-heading font-bold uppercase tracking-wider;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/5 backdrop-blur-md border border-white/10;
+  }
+  
+  .glass-card {
+    @apply bg-card/60 backdrop-blur-md border border-white/10 shadow-lg;
+  }
+
+  .neon-border {
+    @apply border border-primary/50 shadow-[0_0_10px_rgba(var(--primary),0.3)];
+  }
+
+  .text-glow {
+    text-shadow: 0 0 10px currentColor;
   }
 }

@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { FUELS } from "@/lib/mock-data";
 import { useStore } from "@/lib/store";
 import { useLocation, useRoute } from "wouter";
-import { ChevronLeft, Droplets } from "lucide-react";
+import { ChevronLeft, Droplets, Zap } from "lucide-react";
 
 export default function FuelSelectionScreen() {
   const [match, params] = useRoute("/station/:id");
@@ -18,39 +18,56 @@ export default function FuelSelectionScreen() {
   };
 
   if (!selectedStation) {
-    // Fallback if accessed directly without selection
-    return <div className="p-6">Please select a station first.</div>;
+    return <div className="p-6 text-white">Please select a station first.</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className={`h-48 ${selectedStation.color} relative p-6 flex flex-col justify-end text-white`}>
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Dynamic Header */}
+      <div className={`h-56 relative p-6 flex flex-col justify-end overflow-hidden`}>
+        <div className={`absolute inset-0 opacity-20 ${
+          selectedStation.id === 'okko' ? 'bg-green-600' :
+          selectedStation.id === 'wog' ? 'bg-green-500' :
+          selectedStation.id === 'upg' ? 'bg-emerald-500' :
+          'bg-yellow-500'
+        }`} />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background" />
+        
         <button 
           onClick={() => setLocation("/")}
-          className="absolute top-6 left-6 p-2 bg-white/20 backdrop-blur-md rounded-full hover:bg-white/30 transition-colors"
+          className="absolute top-6 left-6 p-2 bg-black/40 backdrop-blur-md rounded-full border border-white/10 hover:bg-white/10 transition-colors z-20"
         >
-          <ChevronLeft className="w-6 h-6" />
+          <ChevronLeft className="w-6 h-6 text-white" />
         </button>
-        <h1 className="text-4xl font-black tracking-tighter opacity-90">{selectedStation.logoText}</h1>
-        <p className="text-white/80 font-medium">Select fuel type</p>
+
+        <div className="relative z-10">
+          <h1 className="text-5xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500 font-heading uppercase">
+            {selectedStation.logoText}
+          </h1>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="px-2 py-0.5 rounded bg-primary/20 text-primary text-[10px] font-mono tracking-wider border border-primary/20">
+              LIVE PRICES
+            </span>
+          </div>
+        </div>
       </div>
 
-      <div className="p-4 -mt-6 space-y-3 relative z-10">
+      <div className="p-4 -mt-8 space-y-3 relative z-10">
         {fuels.map((fuel) => (
           <button
             key={fuel.id}
             onClick={() => handleSelect(fuel)}
-            className="w-full bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between group active:scale-[0.99] transition-all"
+            className="w-full glass-card p-5 rounded-xl flex items-center justify-between group active:scale-[0.99] transition-all hover:bg-white/5"
           >
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
-                <Droplets className="w-5 h-5" />
+              <div className="w-12 h-12 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform duration-300">
+                <Droplets className="w-6 h-6" />
               </div>
               <div className="text-left">
-                <h3 className="font-bold text-gray-900 text-lg">{fuel.name}</h3>
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="text-gray-400 line-through">{fuel.basePrice.toFixed(2)} ₴</span>
-                  <span className="text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded-md">
+                <h3 className="font-bold text-white text-xl tracking-tight">{fuel.name}</h3>
+                <div className="flex items-center gap-3 text-sm mt-1">
+                  <span className="text-gray-500 line-through font-mono">{fuel.basePrice.toFixed(2)}</span>
+                  <span className="text-primary font-bold font-mono text-lg text-glow">
                     {fuel.discountPrice.toFixed(2)} ₴
                   </span>
                 </div>
@@ -58,10 +75,12 @@ export default function FuelSelectionScreen() {
             </div>
             
             <div className="text-right">
-              <span className="block text-xs text-gray-400">Save</span>
-              <span className="block font-bold text-green-600">
-                {(fuel.basePrice - fuel.discountPrice).toFixed(2)} ₴/L
-              </span>
+              <div className="flex flex-col items-end">
+                <span className="text-[10px] text-gray-500 uppercase tracking-widest font-mono mb-1">Savings</span>
+                <span className="px-2 py-1 rounded bg-white/10 text-white font-bold text-xs border border-white/10">
+                  -{(fuel.basePrice - fuel.discountPrice).toFixed(2)}
+                </span>
+              </div>
             </div>
           </button>
         ))}

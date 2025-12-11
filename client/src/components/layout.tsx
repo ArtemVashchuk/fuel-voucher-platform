@@ -9,28 +9,27 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const isActive = (path: string) => location === path;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col max-w-md mx-auto shadow-2xl overflow-hidden relative">
-      <main className="flex-1 overflow-y-auto pb-20 no-scrollbar">
+    <div className="min-h-screen bg-background flex flex-col max-w-md mx-auto shadow-2xl overflow-hidden relative border-x border-white/5">
+      <main className="flex-1 overflow-y-auto pb-24 no-scrollbar">
         {children}
       </main>
 
-      {/* Bottom Navigation */}
-      <nav className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-6 py-3 flex justify-between items-center z-50">
-        <Link href="/" className={cn("flex flex-col items-center gap-1 transition-colors cursor-pointer", isActive("/") ? "text-primary" : "text-gray-400")}>
-          <Home className="w-6 h-6" />
-          <span className="text-[10px] font-medium">Stations</span>
-        </Link>
-        
-        <Link href="/my-codes" className={cn("flex flex-col items-center gap-1 transition-colors cursor-pointer", isActive("/my-codes") ? "text-primary" : "text-gray-400")}>
-          <QrCode className="w-6 h-6" />
-          <span className="text-[10px] font-medium">My Codes</span>
-        </Link>
+      {/* Floating Glass Navigation */}
+      <div className="absolute bottom-6 left-6 right-6 z-50">
+        <nav className="glass rounded-2xl px-6 py-4 flex justify-between items-center shadow-2xl border border-white/10 backdrop-blur-xl bg-black/40">
+          <Link href="/" className={cn("flex flex-col items-center gap-1 transition-all duration-300", isActive("/") ? "text-primary scale-110" : "text-gray-500 hover:text-gray-300")}>
+            <Home className={cn("w-6 h-6", isActive("/") && "drop-shadow-[0_0_8px_rgba(34,197,94,0.6)]")} />
+          </Link>
+          
+          <Link href="/my-codes" className={cn("flex flex-col items-center gap-1 transition-all duration-300", isActive("/my-codes") ? "text-primary scale-110" : "text-gray-500 hover:text-gray-300")}>
+            <QrCode className={cn("w-6 h-6", isActive("/my-codes") && "drop-shadow-[0_0_8px_rgba(34,197,94,0.6)]")} />
+          </Link>
 
-        <Link href="/profile" className={cn("flex flex-col items-center gap-1 transition-colors cursor-pointer", isActive("/profile") ? "text-primary" : "text-gray-400")}>
-          <User className="w-6 h-6" />
-          <span className="text-[10px] font-medium">Profile</span>
-        </Link>
-      </nav>
+          <Link href="/profile" className={cn("flex flex-col items-center gap-1 transition-all duration-300", isActive("/profile") ? "text-primary scale-110" : "text-gray-500 hover:text-gray-300")}>
+            <User className={cn("w-6 h-6", isActive("/profile") && "drop-shadow-[0_0_8px_rgba(34,197,94,0.6)]")} />
+          </Link>
+        </nav>
+      </div>
     </div>
   );
 }
