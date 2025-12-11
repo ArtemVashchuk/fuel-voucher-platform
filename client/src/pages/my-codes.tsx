@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import { X, Copy, QrCode, Zap, Skull, ShieldCheck, AlertTriangle } from "lucide-react";
 import { DialogContent } from "@/components/ui/dialog";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { getPurchasesBySession, getSessionId } from "@/lib/api";
+import { getMyPurchases } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 interface PurchaseWithQr {
@@ -35,13 +36,17 @@ export default function MyCodesScreen() {
 
   const loadPurchases = async () => {
     try {
-      const sessionId = getSessionId();
-      const data = await getPurchasesBySession(sessionId);
+      const data = await getMyPurchases();
       const deliveredPurchases = data.filter(p => p.status === 'delivered' && p.qrCode);
       setPurchases(deliveredPurchases);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to load purchases:", error);
-      toast.error("Failed to load your codes");
+      if (error.message?.includes('401')) {
+        // User not logged in - show empty state
+        setPurchases([]);
+      } else {
+        toast.error("Failed to load your codes");
+      }
     } finally {
       setLoading(false);
     }

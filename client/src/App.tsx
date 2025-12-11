@@ -17,6 +17,7 @@ import CheckoutScreen from "@/pages/checkout";
 import SuccessScreen from "@/pages/success";
 import MyCodesScreen from "@/pages/my-codes";
 import AdminScreen from "@/pages/admin";
+import ProfileScreen from "@/pages/profile";
 
 function Router() {
   return (
@@ -30,7 +31,7 @@ function Router() {
         <Route path="/success" component={SuccessScreen} />
         <Route path="/my-codes" component={MyCodesScreen} />
         <Route path="/admin" component={AdminScreen} />
-        <Route path="/profile" component={() => <div className="p-6 text-center text-gray-500 mt-20">Profile Mockup</div>} />
+        <Route path="/profile" component={ProfileScreen} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

@@ -1,6 +1,5 @@
 
 interface PurchaseData {
-  sessionId: string;
   packageId: string;
   stationName: string;
   fuelName: string;
@@ -41,9 +40,15 @@ export async function createPurchase(data: PurchaseData): Promise<PurchaseRespon
   const response = await fetch('/api/purchases', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify(data),
   });
-  if (!response.ok) throw new Error('Failed to create purchase');
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error('401: Unauthorized - Please log in first');
+    }
+    throw new Error('Failed to create purchase');
+  }
   return response.json();
 }
 
@@ -54,6 +59,17 @@ export async function completePurchase(purchaseId: number): Promise<PurchaseResp
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.error || 'Failed to complete purchase');
+  }
+  return response.json();
+}
+
+export async function getMyPurchases(): Promise<PurchaseResponse[]> {
+  const response = await fetch('/api/purchases/my', { credentials: 'include' });
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error('401: Unauthorized');
+    }
+    throw new Error('Failed to fetch purchases');
   }
   return response.json();
 }

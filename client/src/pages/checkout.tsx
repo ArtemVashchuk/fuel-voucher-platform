@@ -3,11 +3,14 @@ import { useStore } from "@/lib/store";
 import { useLocation } from "wouter";
 import { ChevronLeft, CreditCard, ShieldCheck, Zap, Skull, AlertTriangle, Tag } from "lucide-react";
 import { useState } from "react";
-import { createPurchase, completePurchase, getSessionId } from "@/lib/api";
+import { createPurchase, completePurchase } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
+import { isUnauthorizedError } from "@/lib/authUtils";
 import { toast } from "sonner";
 
 export default function CheckoutScreen() {
   const [, setLocation] = useLocation();
+  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
   const { 
     cart, 
     promocode, 
@@ -22,6 +25,36 @@ export default function CheckoutScreen() {
   const discountedTotal = getDiscountedTotal();
   const discountAmount = total - discountedTotal;
   const totalCards = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-primary font-mono animate-pulse flex items-center gap-3">
+          <Zap className="w-6 h-6 animate-spin" />
+          LOADING...
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="p-6 text-white flex flex-col items-center justify-center min-h-screen relative">
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-64 h-64 bg-primary/20 rounded-full blur-[100px]" />
+        <div className="relative z-10 text-center">
+          <Skull className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-black text-white font-heading uppercase mb-2">ACCESS DENIED</h2>
+          <p className="text-gray-400 font-mono mb-6 text-sm">Sign in to complete your purchase</p>
+          <a
+            href="/api/login"
+            className="inline-flex items-center gap-3 bg-primary text-black px-8 py-4 font-black text-lg font-heading uppercase shadow-[0_0_40px_rgba(0,255,128,0.5)]"
+          >
+            SIGN IN
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   if (cart.length === 0) {
     return (
@@ -40,13 +73,10 @@ export default function CheckoutScreen() {
   const handlePayment = async () => {
     setIsProcessing(true);
     try {
-      const sessionId = getSessionId();
-      
       // Create purchases for each cart item
       for (const item of cart) {
         for (let i = 0; i < item.quantity; i++) {
           const purchase = await createPurchase({
-            sessionId,
             packageId: item.package.id,
             stationName: item.station.name,
             fuelName: item.fuel.name,
@@ -67,8 +97,15 @@ export default function CheckoutScreen() {
       setLocation("/success");
     } catch (error: any) {
       console.error("Payment error:", error);
-      toast.error(error.message || "Payment failed. Please try again.");
       setIsProcessing(false);
+      if (isUnauthorizedError(error)) {
+        toast.error("Please log in to complete your purchase");
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 1000);
+        return;
+      }
+      toast.error(error.message || "Payment failed. Please try again.");
     }
   };
 

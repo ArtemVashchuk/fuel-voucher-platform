@@ -3,11 +3,30 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertPurchaseSchema, insertQrCodeSchema } from "@shared/schema";
 import { ZodError } from "zod";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  // Setup authentication
+  await setupAuth(app);
+
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
   // Get all fuel packages
   app.get("/api/packages", async (req, res) => {
     try {
@@ -31,10 +50,14 @@ export async function registerRoutes(
     }
   });
 
-  // Create a purchase (without Stripe for now)
-  app.post("/api/purchases", async (req, res) => {
+  // Create a purchase (protected route)
+  app.post("/api/purchases", isAuthenticated, async (req: any, res) => {
     try {
-      const purchaseData = insertPurchaseSchema.parse(req.body);
+      const userId = req.user.claims.sub;
+      const purchaseData = insertPurchaseSchema.parse({
+        ...req.body,
+        sessionId: userId, // Use user ID instead of session ID
+      });
       const purchase = await storage.createPurchase(purchaseData);
       res.json(purchase);
     } catch (error) {
@@ -47,13 +70,36 @@ export async function registerRoutes(
     }
   });
 
-  // Get purchases by session
+  // Get purchases by user (protected route)
+  app.get("/api/purchases/my", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const purchases = await storage.getPurchasesBySession(userId);
+      
+      // Fetch QR codes for delivered purchases
+      const purchasesWithQr = await Promise.all(
+        purchases.map(async (purchase) => {
+          if (purchase.qrCodeId && purchase.status === "delivered") {
+            const fullPurchase = await storage.getPurchaseWithQrCode(purchase.id);
+            return fullPurchase || purchase;
+          }
+          return purchase;
+        })
+      );
+      
+      res.json(purchasesWithQr);
+    } catch (error) {
+      console.error("Error fetching purchases:", error);
+      res.status(500).json({ error: "Failed to fetch purchases" });
+    }
+  });
+
+  // Legacy: Get purchases by session (for backwards compatibility)
   app.get("/api/purchases/session/:sessionId", async (req, res) => {
     try {
       const { sessionId } = req.params;
       const purchases = await storage.getPurchasesBySession(sessionId);
       
-      // Fetch QR codes for delivered purchases
       const purchasesWithQr = await Promise.all(
         purchases.map(async (purchase) => {
           if (purchase.qrCodeId && purchase.status === "delivered") {
@@ -84,7 +130,7 @@ export async function registerRoutes(
 
       // Find an available QR code matching the purchase criteria
       const availableQr = await storage.getAvailableQrCode(
-        purchase.packageId.split("-")[1], // Extract station ID from package ID
+        purchase.packageId.split("-")[1],
         purchase.fuelName,
         purchase.liters
       );

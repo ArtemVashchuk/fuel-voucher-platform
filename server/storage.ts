@@ -7,12 +7,19 @@ import {
   type InsertPurchase,
   type FuelPackage,
   type InsertFuelPackage,
+  type User,
+  type UpsertUser,
   qrCodes,
   purchases,
   fuelPackages,
+  users,
 } from "@shared/schema";
 
 export interface IStorage {
+  // User operations (required for Replit Auth)
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
+  
   // QR Code Management
   createQrCode(qrCode: InsertQrCode): Promise<QrCode>;
   getAvailableQrCode(stationId: string, fuelType: string, liters: number): Promise<QrCode | undefined>;
@@ -35,6 +42,27 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  // User Methods (required for Replit Auth)
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
   // QR Code Methods
   async createQrCode(qrCode: InsertQrCode): Promise<QrCode> {
     const [created] = await db.insert(qrCodes).values(qrCode).returning();
