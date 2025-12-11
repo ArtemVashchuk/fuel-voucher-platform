@@ -19,9 +19,15 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.profile': 'PROFILE',
     
     // Stations
-    'stations.title': 'SELECT STATION',
+    'stations.title': 'SELECT',
+    'stations.title2': 'NETWORK',
     'stations.subtitle': 'FUEL NETWORK ACCESS',
     'stations.savings': 'SAVE UP TO',
+    'stations.online': 'ONLINE',
+    'stations.ready': 'READY',
+    'stations.dominate': 'DOMINATE',
+    'stations.authorized': 'AUTHORIZED OPERATORS ONLY',
+    'stations.stationsCount': 'STATIONS',
     
     // Fuel Selection
     'fuel.title': 'SELECT FUEL',
@@ -33,12 +39,18 @@ const translations: Record<Language, Record<string, string>> = {
     // Packages
     'packages.title': 'SELECT PACKAGE',
     'packages.subtitle': 'VOLUME OPTIONS',
-    'packages.liters': 'liters',
+    'packages.liters': 'LITERS',
     'packages.save': 'SAVE',
     'packages.addToCart': 'ADD TO CART',
-    'packages.quantity': 'QUANTITY',
+    'packages.addedToCart': 'ADDED TO CART',
+    'packages.quantity': 'Quantity',
     'packages.perCard': 'per card',
     'packages.total': 'TOTAL',
+    'packages.selectCards': 'SELECT CARDS',
+    'packages.totalSavings': 'Total Savings',
+    'packages.pay': 'Pay',
+    'packages.viewCart': 'VIEW CART',
+    'packages.cards': 'cards',
     
     // Basket
     'basket.title': 'YOUR BASKET',
@@ -103,9 +115,15 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.profile': 'ПРОФІЛЬ',
     
     // Stations
-    'stations.title': 'ОБЕРІТЬ СТАНЦІЮ',
+    'stations.title': 'ОБЕРІТЬ',
+    'stations.title2': 'МЕРЕЖУ',
     'stations.subtitle': 'ДОСТУП ДО МЕРЕЖІ АЗС',
     'stations.savings': 'ЕКОНОМІЯ ДО',
+    'stations.online': 'ОНЛАЙН',
+    'stations.ready': 'ГОТОВО',
+    'stations.dominate': 'ДОМІНУЙ',
+    'stations.authorized': 'ТІЛЬКИ ДЛЯ АВТОРИЗОВАНИХ',
+    'stations.stationsCount': 'СТАНЦІЙ',
     
     // Fuel Selection
     'fuel.title': 'ОБЕРІТЬ ПАЛИВО',
@@ -117,12 +135,18 @@ const translations: Record<Language, Record<string, string>> = {
     // Packages
     'packages.title': 'ОБЕРІТЬ ПАКЕТ',
     'packages.subtitle': "ВАРІАНТИ ОБ'ЄМУ",
-    'packages.liters': 'літрів',
+    'packages.liters': 'ЛІТРІВ',
     'packages.save': 'ЕКОНОМІЯ',
     'packages.addToCart': 'ДОДАТИ В КОШИК',
-    'packages.quantity': 'КІЛЬКІСТЬ',
+    'packages.addedToCart': 'ДОДАНО В КОШИК',
+    'packages.quantity': 'Кількість',
     'packages.perCard': 'за картку',
     'packages.total': 'РАЗОМ',
+    'packages.selectCards': 'ОБЕРІТЬ КАРТКИ',
+    'packages.totalSavings': 'Загальна економія',
+    'packages.pay': 'Сплатити',
+    'packages.viewCart': 'ПЕРЕГЛЯНУТИ КОШИК',
+    'packages.cards': 'карток',
     
     // Basket
     'basket.title': 'ВАШ КОШИК',
@@ -187,9 +211,15 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.profile': 'PROFIL',
     
     // Stations
-    'stations.title': 'STATION WÄHLEN',
+    'stations.title': 'NETZWERK',
+    'stations.title2': 'WÄHLEN',
     'stations.subtitle': 'TANKSTELLENNETZ-ZUGANG',
     'stations.savings': 'SPAREN SIE BIS ZU',
+    'stations.online': 'ONLINE',
+    'stations.ready': 'BEREIT',
+    'stations.dominate': 'DOMINIEREN',
+    'stations.authorized': 'NUR FÜR AUTORISIERTE',
+    'stations.stationsCount': 'STATIONEN',
     
     // Fuel Selection
     'fuel.title': 'KRAFTSTOFF WÄHLEN',
@@ -201,12 +231,18 @@ const translations: Record<Language, Record<string, string>> = {
     // Packages
     'packages.title': 'PAKET WÄHLEN',
     'packages.subtitle': 'VOLUMENOPTIONEN',
-    'packages.liters': 'Liter',
+    'packages.liters': 'LITER',
     'packages.save': 'SPAREN',
     'packages.addToCart': 'IN DEN WARENKORB',
-    'packages.quantity': 'MENGE',
+    'packages.addedToCart': 'HINZUGEFÜGT',
+    'packages.quantity': 'Menge',
     'packages.perCard': 'pro Karte',
     'packages.total': 'GESAMT',
+    'packages.selectCards': 'KARTEN WÄHLEN',
+    'packages.totalSavings': 'Gesamtersparnis',
+    'packages.pay': 'Bezahlen',
+    'packages.viewCart': 'WARENKORB ANSEHEN',
+    'packages.cards': 'Karten',
     
     // Basket
     'basket.title': 'IHR WARENKORB',
@@ -271,9 +307,15 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.profile': 'PERFIL',
     
     // Stations
-    'stations.title': 'SELECCIONAR ESTACIÓN',
+    'stations.title': 'SELECCIONAR',
+    'stations.title2': 'RED',
     'stations.subtitle': 'ACCESO A RED DE COMBUSTIBLE',
     'stations.savings': 'AHORRA HASTA',
+    'stations.online': 'EN LÍNEA',
+    'stations.ready': 'LISTO',
+    'stations.dominate': 'DOMINA',
+    'stations.authorized': 'SOLO OPERADORES AUTORIZADOS',
+    'stations.stationsCount': 'ESTACIONES',
     
     // Fuel Selection
     'fuel.title': 'SELECCIONAR COMBUSTIBLE',
@@ -285,12 +327,18 @@ const translations: Record<Language, Record<string, string>> = {
     // Packages
     'packages.title': 'SELECCIONAR PAQUETE',
     'packages.subtitle': 'OPCIONES DE VOLUMEN',
-    'packages.liters': 'litros',
+    'packages.liters': 'LITROS',
     'packages.save': 'AHORRA',
     'packages.addToCart': 'AÑADIR AL CARRITO',
-    'packages.quantity': 'CANTIDAD',
+    'packages.addedToCart': 'AÑADIDO AL CARRITO',
+    'packages.quantity': 'Cantidad',
     'packages.perCard': 'por tarjeta',
     'packages.total': 'TOTAL',
+    'packages.selectCards': 'SELECCIONAR TARJETAS',
+    'packages.totalSavings': 'Ahorro total',
+    'packages.pay': 'Pagar',
+    'packages.viewCart': 'VER CARRITO',
+    'packages.cards': 'tarjetas',
     
     // Basket
     'basket.title': 'TU CESTA',

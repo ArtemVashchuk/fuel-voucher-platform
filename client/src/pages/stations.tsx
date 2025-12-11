@@ -51,7 +51,7 @@ export default function StationsScreen() {
             </h3>
             <div className="flex items-center gap-2 mt-2">
               <div className="h-px flex-1 bg-gradient-to-r from-primary to-transparent" />
-              <span className="text-[10px] text-primary font-mono tracking-[0.3em] uppercase">DOMINATE</span>
+              <span className="text-[10px] text-primary font-mono tracking-[0.3em] uppercase">{t('stations.dominate')}</span>
               <div className="h-px flex-1 bg-gradient-to-l from-primary to-transparent" />
             </div>
           </div>
@@ -61,14 +61,14 @@ export default function StationsScreen() {
         <div className="relative mb-6">
           <div className="absolute -left-6 top-0 bottom-0 w-1 bg-primary box-glow" />
           <h1 className="text-5xl font-black text-white leading-[0.9] tracking-tighter uppercase font-heading pl-4">
-            SELECT<br />
-            <span className="text-primary text-glow-intense">NETWORK</span>
+            {t('stations.title')}<br />
+            <span className="text-primary text-glow-intense">{t('stations.title2')}</span>
           </h1>
         </div>
         
         <div className="flex items-center gap-3 text-red-500 font-mono text-xs tracking-widest uppercase bg-red-500/10 border border-red-500/30 px-4 py-2 rounded">
           <AlertTriangle className="w-4 h-4 animate-pulse" />
-          <span>// AUTHORIZED OPERATORS ONLY</span>
+          <span>// {t('stations.authorized')}</span>
         </div>
       </header>
 
@@ -109,7 +109,7 @@ export default function StationsScreen() {
                 </div>
                 <div className="flex items-center gap-2 mt-2">
                   <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_10px_rgba(0,255,128,0.8)]" />
-                  <span className="text-[10px] text-gray-400 font-mono uppercase tracking-[0.2em]">ONLINE • READY</span>
+                  <span className="text-[10px] text-gray-400 font-mono uppercase tracking-[0.2em]">{t('stations.online')} • {t('stations.ready')}</span>
                 </div>
               </div>
 

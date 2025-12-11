@@ -5,9 +5,11 @@ import { useStore } from "@/lib/store";
 import { useLocation } from "wouter";
 import { ChevronLeft, Zap, Flame, Skull, Minus, Plus, ShoppingCart, Check } from "lucide-react";
 import { toast } from "sonner";
+import { useI18n } from "@/lib/i18n";
 
 export default function PackagesScreen() {
   const [, setLocation] = useLocation();
+  const { t } = useI18n();
   const { selectedStation, selectedFuel, addToCart, getCartItemCount } = useStore();
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [addedItems, setAddedItems] = useState<Set<string>>(new Set());
@@ -70,7 +72,7 @@ export default function PackagesScreen() {
             </h2>
             <p className="text-xs text-red-400 font-mono tracking-[0.2em] uppercase mt-1 flex items-center gap-2">
               <Skull className="w-3 h-3" />
-              SELECT CARDS
+              {t('packages.selectCards')}
             </p>
           </div>
           
@@ -110,7 +112,7 @@ export default function PackagesScreen() {
                 <div className="flex items-center gap-4">
                   <div className="w-20 h-20 bg-primary/10 border-2 border-primary/30 flex flex-col items-center justify-center">
                     <span className="text-4xl font-black text-white font-heading">{pkg.liters}</span>
-                    <span className="text-xs text-primary font-mono">LITERS</span>
+                    <span className="text-xs text-primary font-mono">{t('packages.liters')}</span>
                   </div>
                   <div>
                     <div className="text-2xl font-black text-white font-heading">{pkg.price} ₴</div>
@@ -126,7 +128,7 @@ export default function PackagesScreen() {
               {/* Quantity selector and summary */}
               <div className="p-4 space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-400 font-mono text-sm uppercase tracking-wider">Quantity</span>
+                  <span className="text-gray-400 font-mono text-sm uppercase tracking-wider">{t('packages.quantity')}</span>
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => updateQuantity(pkg.id, -1)}
@@ -149,16 +151,16 @@ export default function PackagesScreen() {
                 {/* Price summary */}
                 <div className="bg-white/5 border-2 border-white/10 p-4">
                   <div className="flex justify-between text-sm text-gray-400 font-mono mb-2">
-                    <span>{qty}x {pkg.liters}L cards</span>
+                    <span>{qty}x {pkg.liters}L {t('packages.cards')}</span>
                     <span className="text-gray-500 line-through">{totalOriginal} ₴</span>
                   </div>
                   <div className="flex justify-between items-end">
                     <div>
-                      <div className="text-[10px] text-gray-500 uppercase tracking-wider font-mono">Total Savings</div>
+                      <div className="text-[10px] text-gray-500 uppercase tracking-wider font-mono">{t('packages.totalSavings')}</div>
                       <div className="text-primary font-black text-lg">{totalSavings} ₴</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-[10px] text-gray-500 uppercase tracking-wider font-mono">Pay</div>
+                      <div className="text-[10px] text-gray-500 uppercase tracking-wider font-mono">{t('packages.pay')}</div>
                       <div className="text-white font-black text-3xl font-heading">{totalPrice} ₴</div>
                     </div>
                   </div>
@@ -178,12 +180,12 @@ export default function PackagesScreen() {
                   {isAdded ? (
                     <>
                       <Check className="w-6 h-6" />
-                      ADDED TO CART
+                      {t('packages.addedToCart')}
                     </>
                   ) : (
                     <>
                       <ShoppingCart className="w-6 h-6" />
-                      ADD TO CART
+                      {t('packages.addToCart')}
                     </>
                   )}
                 </button>
@@ -201,7 +203,7 @@ export default function PackagesScreen() {
             className="w-full bg-primary text-black py-4 font-black text-lg flex items-center justify-center gap-3 shadow-[0_0_40px_rgba(0,255,128,0.5)] font-heading tracking-wider uppercase"
           >
             <ShoppingCart className="w-6 h-6" />
-            VIEW CART ({cartCount} items)
+            {t('packages.viewCart')} ({cartCount})
           </button>
         </div>
       )}
