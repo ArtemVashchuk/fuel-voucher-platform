@@ -121,19 +121,21 @@ export default function BasketScreen() {
             </div>
             
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-4">
                 <button
                   onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                  className="w-8 h-8 bg-white/10 border border-white/20 flex items-center justify-center hover:bg-red-500/20 hover:border-red-500 transition-all"
+                  data-testid={`btn-minus-${item.id}`}
+                  className="w-10 h-10 bg-white/10 border-2 border-white/20 flex items-center justify-center hover:bg-red-500/20 hover:border-red-500 transition-all active:scale-95"
                 >
-                  <Minus className="w-4 h-4 text-white" />
+                  <Minus className="w-5 h-5 text-white" />
                 </button>
-                <span className="text-2xl font-black text-primary font-mono w-12 text-center">{item.quantity}</span>
+                <span className="text-3xl font-black text-primary font-mono w-14 text-center">{item.quantity}</span>
                 <button
                   onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                  className="w-8 h-8 bg-white/10 border border-white/20 flex items-center justify-center hover:bg-primary/20 hover:border-primary transition-all"
+                  data-testid={`btn-plus-${item.id}`}
+                  className="w-10 h-10 bg-white/10 border-2 border-white/20 flex items-center justify-center hover:bg-primary/20 hover:border-primary transition-all active:scale-95"
                 >
-                  <Plus className="w-4 h-4 text-white" />
+                  <Plus className="w-5 h-5 text-white" />
                 </button>
               </div>
               <div className="text-right">
