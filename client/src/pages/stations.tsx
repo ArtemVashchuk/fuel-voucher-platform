@@ -2,7 +2,7 @@
 import { STATIONS } from "@/lib/mock-data";
 import { useStore } from "@/lib/store";
 import { useLocation } from "wouter";
-import { ArrowRight, Zap } from "lucide-react";
+import { ArrowRight, Zap, Skull, AlertTriangle } from "lucide-react";
 import lionLogo from "@assets/generated_images/profile_cyberpunk_lion_logo.png";
 
 export default function StationsScreen() {
@@ -15,65 +15,110 @@ export default function StationsScreen() {
   };
 
   return (
-    <div className="p-6 pt-12 space-y-8">
-      <header className="relative">
-        <div className="absolute -left-10 -top-10 w-32 h-32 bg-primary/20 rounded-full blur-3xl" />
-        
-        {/* Branding Section */}
-        <div className="flex items-center gap-5 mb-10 relative z-10">
-          <div className="w-20 h-20 rounded-2xl bg-black/50 border border-primary/30 flex items-center justify-center shadow-[0_0_25px_rgba(var(--primary),0.25)] backdrop-blur-xl">
-            <img src={lionLogo} alt="Lemberg Fuel Corp." className="w-14 h-14 object-contain drop-shadow-[0_0_10px_rgba(var(--primary),0.6)]" />
+    <div className="p-6 pt-8 space-y-6 relative overflow-hidden">
+      {/* Aggressive background effects */}
+      <div className="absolute -left-20 -top-20 w-64 h-64 bg-primary/30 rounded-full blur-[100px] animate-pulse" />
+      <div className="absolute -right-20 top-1/2 w-48 h-48 bg-red-500/20 rounded-full blur-[80px]" />
+      
+      <header className="relative z-10">
+        {/* AGGRESSIVE Branding Section */}
+        <div className="flex items-center gap-4 mb-8 relative">
+          <div className="w-24 h-24 rounded-lg bg-black border-2 border-primary flex items-center justify-center box-glow relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-b from-primary/20 to-transparent" />
+            <img src={lionLogo} alt="Lemberg Fuel Corp." className="w-20 h-20 object-contain drop-shadow-[0_0_20px_rgba(0,255,128,0.8)] relative z-10" />
+            {/* Corner accents */}
+            <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-primary" />
+            <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-primary" />
+            <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-primary" />
+            <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-primary" />
           </div>
           <div className="flex-1">
-            <h2 className="text-white font-heading font-black uppercase tracking-widest text-3xl leading-none mb-1 drop-shadow-lg">Lemberg<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">Fuel Corp.</span></h2>
-            <p className="text-xs text-primary font-mono tracking-[0.2em] uppercase text-glow font-bold opacity-80">Future Energy Solutions</p>
+            <h2 className="text-primary font-heading font-black uppercase tracking-[0.15em] text-4xl leading-none mb-1 text-glow-intense animate-flicker">
+              LEMBERG
+            </h2>
+            <h3 className="text-white font-heading font-bold uppercase tracking-[0.3em] text-xl leading-none">
+              FUEL CORP.
+            </h3>
+            <div className="flex items-center gap-2 mt-2">
+              <div className="h-px flex-1 bg-gradient-to-r from-primary to-transparent" />
+              <span className="text-[10px] text-primary font-mono tracking-[0.3em] uppercase">DOMINATE</span>
+              <div className="h-px flex-1 bg-gradient-to-l from-primary to-transparent" />
+            </div>
           </div>
         </div>
 
-        <h1 className="text-4xl font-bold text-white leading-none tracking-tighter relative z-10">
-          SELECT<br />
-          <span className="text-primary text-glow">NETWORK</span>
-        </h1>
-        <p className="text-gray-400 mt-2 font-mono text-xs tracking-widest uppercase relative z-10">
-          // Authorized Partners Only
-        </p>
+        {/* Aggressive Title */}
+        <div className="relative mb-6">
+          <div className="absolute -left-6 top-0 bottom-0 w-1 bg-primary box-glow" />
+          <h1 className="text-5xl font-black text-white leading-[0.9] tracking-tighter uppercase font-heading pl-4">
+            SELECT<br />
+            <span className="text-primary text-glow-intense">NETWORK</span>
+          </h1>
+        </div>
+        
+        <div className="flex items-center gap-3 text-red-500 font-mono text-xs tracking-widest uppercase bg-red-500/10 border border-red-500/30 px-4 py-2 rounded">
+          <AlertTriangle className="w-4 h-4 animate-pulse" />
+          <span>// AUTHORIZED OPERATORS ONLY</span>
+        </div>
       </header>
 
-      <div className="grid grid-cols-1 gap-4">
-        {STATIONS.map((station) => (
+      <div className="grid grid-cols-1 gap-3 relative z-10">
+        {STATIONS.map((station, index) => (
           <button
             key={station.id}
             onClick={() => handleSelect(station)}
-            className="group relative overflow-hidden rounded-xl bg-card border border-white/5 p-6 transition-all duration-300 hover:border-primary/50 hover:shadow-[0_0_20px_rgba(var(--primary),0.15)] text-left flex items-center justify-between"
+            data-testid={`station-${station.id}`}
+            className="group relative overflow-hidden rounded-lg bg-black/80 border-2 border-white/10 p-0 transition-all duration-300 hover:border-primary hover:box-glow text-left flex items-stretch active:scale-[0.98]"
           >
-            {/* Background Gradient */}
-            <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500 bg-gradient-to-r ${
-               station.id === 'okko' ? 'from-green-500 to-transparent' :
-               station.id === 'wog' ? 'from-green-400 to-transparent' :
-               station.id === 'upg' ? 'from-emerald-500 to-transparent' :
-               'from-yellow-500 to-transparent'
-            }`} />
+            {/* Side accent bar */}
+            <div className={`w-2 ${
+              station.id === 'okko' ? 'bg-green-500' :
+              station.id === 'wog' ? 'bg-emerald-400' :
+              station.id === 'upg' ? 'bg-cyan-400' :
+              'bg-yellow-400'
+            } group-hover:shadow-[0_0_20px_currentColor]`} />
             
-            <div className="relative z-10 pl-2">
-              <span className={`text-3xl font-black tracking-tighter uppercase font-heading ${
-                station.id === 'okko' ? 'text-green-500' :
-                station.id === 'wog' ? 'text-green-400' :
-                station.id === 'upg' ? 'text-emerald-400' :
-                'text-yellow-400'
-              }`}>
-                {station.logoText}
-              </span>
-              <div className="flex items-center gap-1 mt-1">
-                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-[10px] text-gray-500 font-mono uppercase tracking-wider">Online</span>
+            {/* Content */}
+            <div className="flex-1 p-5 flex items-center justify-between">
+              <div className="relative z-10">
+                <div className="flex items-center gap-3">
+                  <span className={`text-4xl font-black tracking-tighter uppercase font-heading ${
+                    station.id === 'okko' ? 'text-green-500' :
+                    station.id === 'wog' ? 'text-emerald-400' :
+                    station.id === 'upg' ? 'text-cyan-400' :
+                    'text-yellow-400'
+                  } group-hover:text-glow transition-all`}>
+                    {station.logoText}
+                  </span>
+                  <Zap className={`w-5 h-5 ${
+                    station.id === 'okko' ? 'text-green-500' :
+                    station.id === 'wog' ? 'text-emerald-400' :
+                    station.id === 'upg' ? 'text-cyan-400' :
+                    'text-yellow-400'
+                  } opacity-50 group-hover:opacity-100 group-hover:animate-pulse`} />
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_10px_rgba(0,255,128,0.8)]" />
+                  <span className="text-[10px] text-gray-400 font-mono uppercase tracking-[0.2em]">ONLINE • READY</span>
+                </div>
+              </div>
+
+              <div className="relative z-10 w-12 h-12 bg-primary/10 border-2 border-primary/50 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-black transition-all group-hover:shadow-[0_0_30px_rgba(0,255,128,0.5)]">
+                <ArrowRight className="w-6 h-6" />
               </div>
             </div>
-
-            <div className="relative z-10 bg-white/5 p-3 rounded-lg text-gray-400 group-hover:text-primary group-hover:bg-primary/10 transition-colors border border-white/5 group-hover:border-primary/30">
-              <ArrowRight className="w-5 h-5" />
-            </div>
+            
+            {/* Hover overlay */}
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
           </button>
         ))}
+      </div>
+      
+      {/* Bottom warning */}
+      <div className="text-center py-4 border-t border-white/5">
+        <p className="text-[10px] text-gray-600 font-mono tracking-[0.3em] uppercase">
+          [ ENCRYPTED TRANSACTION PROTOCOL v2.4 ]
+        </p>
       </div>
     </div>
   );
