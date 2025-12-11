@@ -3,7 +3,7 @@ import { STATIONS } from "@/lib/mock-data";
 import { useStore } from "@/lib/store";
 import { useLocation } from "wouter";
 import { ArrowRight, Zap, Skull, AlertTriangle } from "lucide-react";
-import lionLogo from "@assets/generated_images/aggressive_roaring_cyberpunk_lion.png";
+import lionLogo from "@assets/generated_images/fierce_cyberpunk_lion_profile_logo.png";
 
 export default function StationsScreen() {
   const [, setLocation] = useLocation();
