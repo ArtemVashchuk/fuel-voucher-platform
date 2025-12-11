@@ -3,7 +3,7 @@ import { STATIONS } from "@/lib/mock-data";
 import { useStore } from "@/lib/store";
 import { useLocation } from "wouter";
 import { ArrowRight, Zap, Skull, AlertTriangle } from "lucide-react";
-import lionLogo from "@assets/generated_images/fierce_cyberpunk_lion_profile_logo.png";
+import lionLogo from "@assets/generated_images/profile_cyberpunk_lion_logo.png";
 
 export default function StationsScreen() {
   const [, setLocation] = useLocation();
@@ -23,14 +23,22 @@ export default function StationsScreen() {
       <header className="relative z-10">
         {/* AGGRESSIVE Branding Section */}
         <div className="flex items-center gap-4 mb-8 relative">
-          <div className="w-24 h-24 rounded-lg bg-black border-2 border-primary flex items-center justify-center box-glow relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-b from-primary/20 to-transparent" />
-            <img src={lionLogo} alt="Lemberg Fuel Corp." className="w-20 h-20 object-contain drop-shadow-[0_0_20px_rgba(0,255,128,0.8)] relative z-10" />
-            {/* Corner accents */}
-            <div className="absolute top-0 left-0 w-3 h-3 border-t-2 border-l-2 border-primary" />
-            <div className="absolute top-0 right-0 w-3 h-3 border-t-2 border-r-2 border-primary" />
-            <div className="absolute bottom-0 left-0 w-3 h-3 border-b-2 border-l-2 border-primary" />
-            <div className="absolute bottom-0 right-0 w-3 h-3 border-b-2 border-r-2 border-primary" />
+          <div className="w-28 h-28 bg-black border-4 border-primary flex items-center justify-center relative overflow-hidden animate-pulse-glow">
+            {/* Intense glow background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-transparent to-red-500/20" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,255,128,0.3)_0%,transparent_70%)]" />
+            
+            {/* Logo with intense effects */}
+            <img src={lionLogo} alt="Lemberg Fuel Corp." className="w-24 h-24 object-contain drop-shadow-[0_0_30px_rgba(0,255,128,1)] relative z-10 saturate-150 contrast-125" />
+            
+            {/* Corner accents - sharper */}
+            <div className="absolute top-0 left-0 w-4 h-4 border-t-4 border-l-4 border-primary shadow-[0_0_10px_rgba(0,255,128,0.8)]" />
+            <div className="absolute top-0 right-0 w-4 h-4 border-t-4 border-r-4 border-primary shadow-[0_0_10px_rgba(0,255,128,0.8)]" />
+            <div className="absolute bottom-0 left-0 w-4 h-4 border-b-4 border-l-4 border-red-500 shadow-[0_0_10px_rgba(255,50,50,0.8)]" />
+            <div className="absolute bottom-0 right-0 w-4 h-4 border-b-4 border-r-4 border-red-500 shadow-[0_0_10px_rgba(255,50,50,0.8)]" />
+            
+            {/* Scan line effect */}
+            <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,0,0,0.3)_50%)] bg-[length:100%_4px] pointer-events-none opacity-30" />
           </div>
           <div className="flex-1">
             <h2 className="text-primary font-heading font-black uppercase tracking-[0.15em] text-4xl leading-none mb-1 text-glow-intense animate-flicker">
