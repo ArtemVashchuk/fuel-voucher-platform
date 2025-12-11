@@ -90,7 +90,7 @@ export default function PackagesScreen() {
         </div>
       </div>
 
-      <div className="p-4 space-y-4 flex-1 relative z-10">
+      <div className="p-4 space-y-4 flex-1 relative z-10 pb-40">
         {packages.map((pkg) => {
           const savings = pkg.originalPrice - pkg.price;
           const qty = getQuantity(pkg.id);
@@ -195,7 +195,7 @@ export default function PackagesScreen() {
       
       {/* Floating cart summary */}
       {cartCount > 0 && (
-        <div className="sticky bottom-24 mx-4 z-20">
+        <div className="fixed bottom-28 left-0 right-0 max-w-md mx-auto px-4 z-40">
           <button
             onClick={() => setLocation("/basket")}
             className="w-full bg-primary text-black py-4 font-black text-lg flex items-center justify-center gap-3 shadow-[0_0_40px_rgba(0,255,128,0.5)] font-heading tracking-wider uppercase"
