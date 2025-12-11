@@ -20,13 +20,13 @@ export default function StationsScreen() {
         <div className="absolute -left-10 -top-10 w-32 h-32 bg-primary/20 rounded-full blur-3xl" />
         
         {/* Branding Section */}
-        <div className="flex items-center gap-3 mb-6 relative z-10">
-          <div className="w-12 h-12 rounded-lg bg-black/50 border border-primary/30 flex items-center justify-center shadow-[0_0_15px_rgba(var(--primary),0.2)]">
-            <img src={lionLogo} alt="Lemberg Fuel Corp." className="w-8 h-8 object-contain drop-shadow-[0_0_5px_rgba(var(--primary),0.5)]" />
+        <div className="flex items-center gap-5 mb-10 relative z-10">
+          <div className="w-20 h-20 rounded-2xl bg-black/50 border border-primary/30 flex items-center justify-center shadow-[0_0_25px_rgba(var(--primary),0.25)] backdrop-blur-xl">
+            <img src={lionLogo} alt="Lemberg Fuel Corp." className="w-14 h-14 object-contain drop-shadow-[0_0_10px_rgba(var(--primary),0.6)]" />
           </div>
-          <div>
-            <h2 className="text-white font-heading font-bold uppercase tracking-wider text-sm">Lemberg Fuel Corp.</h2>
-            <p className="text-[10px] text-primary font-mono tracking-widest uppercase text-glow">Future Energy Solutions</p>
+          <div className="flex-1">
+            <h2 className="text-white font-heading font-black uppercase tracking-widest text-3xl leading-none mb-1 drop-shadow-lg">Lemberg<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">Fuel Corp.</span></h2>
+            <p className="text-xs text-primary font-mono tracking-[0.2em] uppercase text-glow font-bold opacity-80">Future Energy Solutions</p>
           </div>
         </div>
 
