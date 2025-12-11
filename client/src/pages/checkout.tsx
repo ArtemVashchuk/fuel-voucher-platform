@@ -3,34 +3,47 @@ import { useStore } from "@/lib/store";
 import { useLocation } from "wouter";
 import { ChevronLeft, CreditCard, ShieldCheck, Cpu, ArrowDown } from "lucide-react";
 import { useState } from "react";
+import { createPurchase, completePurchase, getSessionId } from "@/lib/api";
+import { toast } from "sonner";
 
 export default function CheckoutScreen() {
   const [, setLocation] = useLocation();
-  const { selectedStation, selectedFuel, selectedPackage, addPurchase } = useStore();
+  const { selectedStation, selectedFuel, selectedPackage, resetSelection } = useStore();
   const [isProcessing, setIsProcessing] = useState(false);
 
   if (!selectedStation || !selectedFuel || !selectedPackage) {
     return <div className="p-6 text-white">Missing checkout data.</div>;
   }
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     setIsProcessing(true);
-    setTimeout(() => {
-      const newPurchase = {
-        id: Math.random().toString(36).substr(2, 9).toUpperCase(),
+    try {
+      // Create purchase
+      const purchase = await createPurchase({
+        sessionId: getSessionId(),
         packageId: selectedPackage.id,
         stationName: selectedStation.name,
         fuelName: selectedFuel.name,
         liters: selectedPackage.liters,
-        qrCodeUrl: "https://api.qrserver.com/v1/create-qr-code/?size=200x200&color=00ffaa&bgcolor=000&data=MOCK_FUEL_CODE_" + Math.random(),
-        purchaseDate: new Date().toISOString(),
-        status: 'active' as const
-      };
+        price: selectedPackage.price,
+        status: "pending",
+      });
+
+      // Simulate payment delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Complete purchase (assign QR code)
+      await completePurchase(purchase.id);
+
+      // Reset selection
+      resetSelection();
       
-      addPurchase(newPurchase);
-      setIsProcessing(false);
       setLocation("/success");
-    }, 2000);
+    } catch (error: any) {
+      console.error("Payment error:", error);
+      toast.error(error.message || "Payment failed. Please try again.");
+      setIsProcessing(false);
+    }
   };
 
   return (
