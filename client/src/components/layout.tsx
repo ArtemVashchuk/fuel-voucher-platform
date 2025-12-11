@@ -25,9 +25,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <img 
           src={lionLogo} 
           alt="" 
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] object-contain opacity-[0.03] saturate-0 contrast-200"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] object-contain opacity-[0.08] saturate-0 contrast-200"
         />
-        <div className="absolute bottom-0 right-0 w-64 h-64 opacity-[0.05]">
+        <div className="absolute bottom-0 right-0 w-64 h-64 opacity-[0.12]">
           <img src={lionLogo} alt="" className="w-full h-full object-contain saturate-0" />
         </div>
       </div>
