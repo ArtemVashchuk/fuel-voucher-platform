@@ -3,6 +3,7 @@ import { STATIONS } from "@/lib/mock-data";
 import { useStore } from "@/lib/store";
 import { useLocation } from "wouter";
 import { ArrowRight, Zap } from "lucide-react";
+import lionLogo from "@assets/generated_images/cyberpunk_lion_logo.png";
 
 export default function StationsScreen() {
   const [, setLocation] = useLocation();
@@ -17,6 +18,18 @@ export default function StationsScreen() {
     <div className="p-6 pt-12 space-y-8">
       <header className="relative">
         <div className="absolute -left-10 -top-10 w-32 h-32 bg-primary/20 rounded-full blur-3xl" />
+        
+        {/* Branding Section */}
+        <div className="flex items-center gap-3 mb-6 relative z-10">
+          <div className="w-12 h-12 rounded-lg bg-black/50 border border-primary/30 flex items-center justify-center shadow-[0_0_15px_rgba(var(--primary),0.2)]">
+            <img src={lionLogo} alt="Lemberg Fuel Corp." className="w-8 h-8 object-contain drop-shadow-[0_0_5px_rgba(var(--primary),0.5)]" />
+          </div>
+          <div>
+            <h2 className="text-white font-heading font-bold uppercase tracking-wider text-sm">Lemberg Fuel Corp.</h2>
+            <p className="text-[10px] text-primary font-mono tracking-widest uppercase text-glow">Future Energy Solutions</p>
+          </div>
+        </div>
+
         <h1 className="text-4xl font-bold text-white leading-none tracking-tighter relative z-10">
           SELECT<br />
           <span className="text-primary text-glow">NETWORK</span>
