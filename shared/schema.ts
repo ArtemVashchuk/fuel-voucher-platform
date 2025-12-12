@@ -18,6 +18,7 @@ export const sessions = pgTable(
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: varchar("email").unique(),
+  phone: varchar("phone").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
@@ -27,6 +28,23 @@ export const users = pgTable("users", {
 
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+
+// Phone verification codes
+export const phoneVerifications = pgTable("phone_verifications", {
+  id: serial("id").primaryKey(),
+  phone: varchar("phone").notNull(),
+  code: varchar("code", { length: 6 }).notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  verified: integer("verified").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertPhoneVerificationSchema = createInsertSchema(phoneVerifications).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertPhoneVerification = z.infer<typeof insertPhoneVerificationSchema>;
+export type PhoneVerification = typeof phoneVerifications.$inferSelect;
 
 // QR Codes Inventory
 export const qrCodes = pgTable("qr_codes", {
