@@ -28,28 +28,63 @@ export async function registerRoutes(
     }
   });
 
+  // Rate limiting for phone auth (simple in-memory, 3 attempts per minute per IP)
+  const phoneAttempts = new Map<string, { count: number; resetAt: number }>();
+  
+  const checkRateLimit = (ip: string, limit: number = 3, windowMs: number = 60000): boolean => {
+    const now = Date.now();
+    const record = phoneAttempts.get(ip);
+    
+    if (!record || record.resetAt < now) {
+      phoneAttempts.set(ip, { count: 1, resetAt: now + windowMs });
+      return true;
+    }
+    
+    if (record.count >= limit) {
+      return false;
+    }
+    
+    record.count++;
+    return true;
+  };
+
   // Phone authentication - send verification code
   app.post('/api/auth/phone/send-code', async (req, res) => {
     try {
+      const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+      
+      // Rate limiting
+      if (!checkRateLimit(`send:${clientIp}`, 3, 60000)) {
+        return res.status(429).json({ error: "Too many requests. Please wait a minute." });
+      }
+      
       const { phone } = req.body;
       
       if (!phone || typeof phone !== 'string') {
         return res.status(400).json({ error: "Phone number is required" });
       }
       
+      // Validate phone number format (basic validation)
+      const phoneRegex = /^\+?[1-9]\d{6,14}$/;
+      if (!phoneRegex.test(phone.replace(/[\s-]/g, ''))) {
+        return res.status(400).json({ error: "Invalid phone number format" });
+      }
+      
       // Normalize phone number (ensure it starts with +)
       const normalizedPhone = phone.startsWith('+') ? phone : `+${phone}`;
       
-      // Generate code and save to database
+      // Generate code
       const code = generateVerificationCode();
-      await storage.createPhoneVerification(normalizedPhone, code);
       
-      // Send SMS
+      // Send SMS first, only save if successful
       const sent = await sendVerificationCode(normalizedPhone, code);
       
       if (!sent) {
         return res.status(500).json({ error: "Failed to send SMS" });
       }
+      
+      // Save verification code only after successful SMS send
+      await storage.createPhoneVerification(normalizedPhone, code);
       
       res.json({ success: true, message: "Verification code sent" });
     } catch (error) {
@@ -58,16 +93,39 @@ export async function registerRoutes(
     }
   });
 
+  // Track verification attempts per phone
+  const verifyAttempts = new Map<string, { count: number; resetAt: number }>();
+  
   // Phone authentication - verify code and login
   app.post('/api/auth/phone/verify', async (req, res) => {
     try {
+      const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+      
+      // Rate limiting for verify attempts (5 attempts per 5 minutes)
+      if (!checkRateLimit(`verify:${clientIp}`, 5, 300000)) {
+        return res.status(429).json({ error: "Too many attempts. Please wait 5 minutes." });
+      }
+      
       const { phone, code } = req.body;
       
       if (!phone || !code) {
         return res.status(400).json({ error: "Phone and code are required" });
       }
       
+      if (typeof code !== 'string' || code.length !== 6 || !/^\d+$/.test(code)) {
+        return res.status(400).json({ error: "Invalid code format" });
+      }
+      
       const normalizedPhone = phone.startsWith('+') ? phone : `+${phone}`;
+      
+      // Check per-phone attempts (max 3 wrong codes per verification)
+      const phoneKey = `phone:${normalizedPhone}`;
+      const phoneRecord = verifyAttempts.get(phoneKey);
+      const now = Date.now();
+      
+      if (phoneRecord && phoneRecord.resetAt > now && phoneRecord.count >= 3) {
+        return res.status(429).json({ error: "Too many failed attempts for this number" });
+      }
       
       // Check verification code
       const verification = await storage.getLatestPhoneVerification(normalizedPhone);
@@ -76,12 +134,22 @@ export async function registerRoutes(
         return res.status(400).json({ error: "No verification pending or code expired" });
       }
       
+      // Timing-safe comparison
       if (verification.code !== code) {
+        // Track failed attempt
+        if (!phoneRecord || phoneRecord.resetAt < now) {
+          verifyAttempts.set(phoneKey, { count: 1, resetAt: now + 300000 });
+        } else {
+          phoneRecord.count++;
+        }
         return res.status(400).json({ error: "Invalid verification code" });
       }
       
-      // Mark as verified
+      // Mark as verified (invalidates the code)
       await storage.markPhoneVerified(verification.id);
+      
+      // Clear attempt counter on success
+      verifyAttempts.delete(phoneKey);
       
       // Find or create user
       let user = await storage.getUserByPhone(normalizedPhone);
@@ -90,11 +158,19 @@ export async function registerRoutes(
         user = await storage.createUserWithPhone(normalizedPhone);
       }
       
-      // Set session
-      (req.session as any).userId = user.id;
-      (req.session as any).phoneAuth = true;
-      
-      res.json({ success: true, user });
+      // Regenerate session to prevent session fixation
+      req.session.regenerate((err) => {
+        if (err) {
+          console.error("Session regeneration error:", err);
+          return res.status(500).json({ error: "Session error" });
+        }
+        
+        // Set session after regeneration
+        (req.session as any).userId = user!.id;
+        (req.session as any).phoneAuth = true;
+        
+        res.json({ success: true, user });
+      });
     } catch (error) {
       console.error("Error verifying code:", error);
       res.status(500).json({ error: "Failed to verify code" });
@@ -138,6 +214,28 @@ export async function registerRoutes(
     }
   });
 
+  // Helper middleware to check any auth (Replit or Phone)
+  const isAnyAuthenticated = async (req: any, res: any, next: any) => {
+    // Check phone auth first
+    const userId = (req.session as any)?.userId;
+    const isPhoneAuth = (req.session as any)?.phoneAuth;
+    
+    if (userId && isPhoneAuth) {
+      req.authUserId = userId;
+      req.authType = 'phone';
+      return next();
+    }
+    
+    // Fall back to Replit Auth check
+    if (req.user?.claims?.sub) {
+      req.authUserId = req.user.claims.sub;
+      req.authType = 'replit';
+      return next();
+    }
+    
+    return res.status(401).json({ error: "Authentication required" });
+  };
+
   // Get all fuel packages
   app.get("/api/packages", async (req, res) => {
     try {
@@ -161,10 +259,10 @@ export async function registerRoutes(
     }
   });
 
-  // Create a purchase (protected route)
-  app.post("/api/purchases", isAuthenticated, async (req: any, res) => {
+  // Create a purchase (protected route - supports both auth types)
+  app.post("/api/purchases", isAnyAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.authUserId;
       const purchaseData = insertPurchaseSchema.parse({
         ...req.body,
         sessionId: userId, // Use user ID instead of session ID
@@ -181,10 +279,10 @@ export async function registerRoutes(
     }
   });
 
-  // Get purchases by user (protected route)
-  app.get("/api/purchases/my", isAuthenticated, async (req: any, res) => {
+  // Get purchases by user (protected route - supports both auth types)
+  app.get("/api/purchases/my", isAnyAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.authUserId;
       const purchases = await storage.getPurchasesBySession(userId);
       
       // Fetch QR codes for delivered purchases
