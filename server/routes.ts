@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { insertPurchaseSchema, insertQrCodeSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { generateVerificationCode, sendVerificationCode } from "./twilio";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -24,6 +25,116 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Phone authentication - send verification code
+  app.post('/api/auth/phone/send-code', async (req, res) => {
+    try {
+      const { phone } = req.body;
+      
+      if (!phone || typeof phone !== 'string') {
+        return res.status(400).json({ error: "Phone number is required" });
+      }
+      
+      // Normalize phone number (ensure it starts with +)
+      const normalizedPhone = phone.startsWith('+') ? phone : `+${phone}`;
+      
+      // Generate code and save to database
+      const code = generateVerificationCode();
+      await storage.createPhoneVerification(normalizedPhone, code);
+      
+      // Send SMS
+      const sent = await sendVerificationCode(normalizedPhone, code);
+      
+      if (!sent) {
+        return res.status(500).json({ error: "Failed to send SMS" });
+      }
+      
+      res.json({ success: true, message: "Verification code sent" });
+    } catch (error) {
+      console.error("Error sending verification code:", error);
+      res.status(500).json({ error: "Failed to send verification code" });
+    }
+  });
+
+  // Phone authentication - verify code and login
+  app.post('/api/auth/phone/verify', async (req, res) => {
+    try {
+      const { phone, code } = req.body;
+      
+      if (!phone || !code) {
+        return res.status(400).json({ error: "Phone and code are required" });
+      }
+      
+      const normalizedPhone = phone.startsWith('+') ? phone : `+${phone}`;
+      
+      // Check verification code
+      const verification = await storage.getLatestPhoneVerification(normalizedPhone);
+      
+      if (!verification) {
+        return res.status(400).json({ error: "No verification pending or code expired" });
+      }
+      
+      if (verification.code !== code) {
+        return res.status(400).json({ error: "Invalid verification code" });
+      }
+      
+      // Mark as verified
+      await storage.markPhoneVerified(verification.id);
+      
+      // Find or create user
+      let user = await storage.getUserByPhone(normalizedPhone);
+      
+      if (!user) {
+        user = await storage.createUserWithPhone(normalizedPhone);
+      }
+      
+      // Set session
+      (req.session as any).userId = user.id;
+      (req.session as any).phoneAuth = true;
+      
+      res.json({ success: true, user });
+    } catch (error) {
+      console.error("Error verifying code:", error);
+      res.status(500).json({ error: "Failed to verify code" });
+    }
+  });
+
+  // Get current user for phone auth
+  app.get('/api/auth/phone/user', async (req, res) => {
+    try {
+      const userId = (req.session as any)?.userId;
+      const isPhoneAuth = (req.session as any)?.phoneAuth;
+      
+      if (!userId || !isPhoneAuth) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching phone auth user:", error);
+      res.status(500).json({ error: "Failed to fetch user" });
+    }
+  });
+
+  // Phone auth logout
+  app.post('/api/auth/phone/logout', async (req, res) => {
+    try {
+      req.session.destroy((err) => {
+        if (err) {
+          return res.status(500).json({ error: "Failed to logout" });
+        }
+        res.json({ success: true });
+      });
+    } catch (error) {
+      console.error("Error logging out:", error);
+      res.status(500).json({ error: "Failed to logout" });
     }
   });
 

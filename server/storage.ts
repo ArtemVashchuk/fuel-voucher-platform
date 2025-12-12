@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, gt, desc } from "drizzle-orm";
 import {
   type QrCode,
   type InsertQrCode,
@@ -9,16 +9,26 @@ import {
   type InsertFuelPackage,
   type User,
   type UpsertUser,
+  type PhoneVerification,
+  type InsertPhoneVerification,
   qrCodes,
   purchases,
   fuelPackages,
   users,
+  phoneVerifications,
 } from "@shared/schema";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
+  getUserByPhone(phone: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  createUserWithPhone(phone: string): Promise<User>;
+  
+  // Phone verification
+  createPhoneVerification(phone: string, code: string): Promise<PhoneVerification>;
+  getLatestPhoneVerification(phone: string): Promise<PhoneVerification | undefined>;
+  markPhoneVerified(id: number): Promise<void>;
   
   // QR Code Management
   createQrCode(qrCode: InsertQrCode): Promise<QrCode>;
@@ -61,6 +71,52 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return user;
+  }
+
+  async getUserByPhone(phone: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.phone, phone));
+    return user;
+  }
+
+  async createUserWithPhone(phone: string): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values({ phone })
+      .returning();
+    return user;
+  }
+
+  // Phone Verification Methods
+  async createPhoneVerification(phone: string, code: string): Promise<PhoneVerification> {
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+    const [verification] = await db
+      .insert(phoneVerifications)
+      .values({ phone, code, expiresAt })
+      .returning();
+    return verification;
+  }
+
+  async getLatestPhoneVerification(phone: string): Promise<PhoneVerification | undefined> {
+    const [verification] = await db
+      .select()
+      .from(phoneVerifications)
+      .where(
+        and(
+          eq(phoneVerifications.phone, phone),
+          gt(phoneVerifications.expiresAt, new Date()),
+          eq(phoneVerifications.verified, 0)
+        )
+      )
+      .orderBy(desc(phoneVerifications.createdAt))
+      .limit(1);
+    return verification;
+  }
+
+  async markPhoneVerified(id: number): Promise<void> {
+    await db
+      .update(phoneVerifications)
+      .set({ verified: 1 })
+      .where(eq(phoneVerifications.id, id));
   }
 
   // QR Code Methods
