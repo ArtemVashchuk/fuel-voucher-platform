@@ -70,12 +70,14 @@ export const purchases = pgTable("purchases", {
   id: serial("id").primaryKey(),
   sessionId: text("session_id").notNull(), // Track user by session for now
   packageId: text("package_id").notNull(),
+  stationId: text("station_id").notNull(),
   stationName: text("station_name").notNull(),
+  fuelType: text("fuel_type").notNull(),
   fuelName: text("fuel_name").notNull(),
   liters: integer("liters").notNull(),
   price: integer("price").notNull(), // in UAH
   qrCodeId: integer("qr_code_id"),
-  status: text("status").notNull().default("pending"), // pending, delivered, failed
+  status: text("status").notNull().default("pending"), // pending, delivered, pending_qr, failed
   stripeSessionId: text("stripe_session_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

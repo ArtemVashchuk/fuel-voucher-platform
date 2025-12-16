@@ -1,10 +1,11 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertPurchaseSchema, insertQrCodeSchema } from "@shared/schema";
+import { insertPurchaseSchema, insertQrCodeSchema, insertFuelPackageSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { generateVerificationCode, sendVerificationCode } from "./twilio";
+import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -398,6 +399,129 @@ export async function registerRoutes(
       } else {
         console.error("Error bulk creating QR codes:", error);
         res.status(500).json({ error: "Failed to bulk create QR codes" });
+      }
+    }
+  });
+
+  // Stripe Checkout - Create checkout session
+  app.post("/api/checkout", isAnyAuthenticated, async (req: any, res) => {
+    try {
+      const { packageId, stationId, stationName, fuelType, fuelName, liters, price } = req.body;
+      const userId = req.authUserId;
+
+      const purchase = await storage.createPurchase({
+        sessionId: userId,
+        packageId,
+        stationId,
+        stationName,
+        fuelType,
+        fuelName,
+        liters,
+        price,
+        status: "pending",
+      });
+
+      const stripe = await getUncachableStripeClient();
+      const baseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
+
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [{
+          price_data: {
+            currency: 'uah',
+            product_data: {
+              name: `${stationName} - ${fuelName} ${liters}L`,
+              description: `Fuel voucher for ${liters} liters of ${fuelName}`,
+            },
+            unit_amount: price * 100,
+          },
+          quantity: 1,
+        }],
+        mode: 'payment',
+        success_url: `${baseUrl}/success?purchase_id=${purchase.id}`,
+        cancel_url: `${baseUrl}/cart`,
+        metadata: {
+          purchaseId: purchase.id.toString(),
+          userId,
+          stationId,
+          fuelType,
+          liters: liters.toString(),
+        },
+      });
+
+      await storage.updatePurchaseStatus(purchase.id, "pending", undefined);
+      
+      res.json({ url: session.url, purchaseId: purchase.id });
+    } catch (error) {
+      console.error("Error creating checkout session:", error);
+      res.status(500).json({ error: "Failed to create checkout session" });
+    }
+  });
+
+  // Get Stripe publishable key
+  app.get("/api/stripe/config", async (req, res) => {
+    try {
+      const publishableKey = await getStripePublishableKey();
+      res.json({ publishableKey });
+    } catch (error) {
+      console.error("Error getting Stripe config:", error);
+      res.status(500).json({ error: "Failed to get Stripe config" });
+    }
+  });
+
+  // Admin API routes
+  app.get("/api/admin/qr-codes", async (req, res) => {
+    try {
+      const qrCodes = await storage.getAllQrCodes();
+      res.json(qrCodes);
+    } catch (error) {
+      console.error("Error fetching QR codes:", error);
+      res.status(500).json({ error: "Failed to fetch QR codes" });
+    }
+  });
+
+  app.delete("/api/admin/qr-codes/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteQrCode(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting QR code:", error);
+      res.status(500).json({ error: "Failed to delete QR code" });
+    }
+  });
+
+  app.get("/api/admin/purchases", async (req, res) => {
+    try {
+      const purchases = await storage.getAllPurchases();
+      res.json(purchases);
+    } catch (error) {
+      console.error("Error fetching purchases:", error);
+      res.status(500).json({ error: "Failed to fetch purchases" });
+    }
+  });
+
+  app.get("/api/admin/packages", async (req, res) => {
+    try {
+      const packages = await storage.getAllPackages();
+      res.json(packages);
+    } catch (error) {
+      console.error("Error fetching packages:", error);
+      res.status(500).json({ error: "Failed to fetch packages" });
+    }
+  });
+
+  app.post("/api/admin/packages", async (req, res) => {
+    try {
+      const packageData = insertFuelPackageSchema.parse(req.body);
+      const pkg = await storage.createPackage(packageData);
+      res.json(pkg);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        res.status(400).json({ error: "Invalid package data", details: error.errors });
+      } else {
+        console.error("Error creating package:", error);
+        res.status(500).json({ error: "Failed to create package" });
       }
     }
   });

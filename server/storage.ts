@@ -49,6 +49,16 @@ export interface IStorage {
   
   // Get purchase with QR code details
   getPurchaseWithQrCode(purchaseId: number): Promise<(Purchase & { qrCode?: QrCode }) | undefined>;
+  
+  // QR Assignment
+  findAvailableQrCode(stationId: string, fuelType: string, liters: number): Promise<QrCode | undefined>;
+  assignQrToPurchase(purchaseId: number, qrCodeId: number): Promise<void>;
+  
+  // Admin operations
+  getAllQrCodes(): Promise<QrCode[]>;
+  getAllPurchases(): Promise<Purchase[]>;
+  deleteQrCode(id: number): Promise<void>;
+  updateQrCode(id: number, data: Partial<InsertQrCode>): Promise<QrCode>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -207,6 +217,46 @@ export class DatabaseStorage implements IStorage {
   async createPackage(pkg: InsertFuelPackage): Promise<FuelPackage> {
     const [created] = await db.insert(fuelPackages).values(pkg).returning();
     return created;
+  }
+
+  // QR Assignment Methods
+  async findAvailableQrCode(stationId: string, fuelType: string, liters: number): Promise<QrCode | undefined> {
+    const [qrCode] = await db
+      .select()
+      .from(qrCodes)
+      .where(
+        and(
+          eq(qrCodes.stationId, stationId),
+          eq(qrCodes.fuelType, fuelType),
+          eq(qrCodes.liters, liters),
+          eq(qrCodes.status, "available")
+        )
+      )
+      .limit(1);
+    return qrCode;
+  }
+
+  async assignQrToPurchase(purchaseId: number, qrCodeId: number): Promise<void> {
+    await db.update(qrCodes).set({ status: "sold", purchaseId }).where(eq(qrCodes.id, qrCodeId));
+    await db.update(purchases).set({ qrCodeId, status: "delivered" }).where(eq(purchases.id, purchaseId));
+  }
+
+  // Admin Methods
+  async getAllQrCodes(): Promise<QrCode[]> {
+    return await db.select().from(qrCodes).orderBy(desc(qrCodes.createdAt));
+  }
+
+  async getAllPurchases(): Promise<Purchase[]> {
+    return await db.select().from(purchases).orderBy(desc(purchases.createdAt));
+  }
+
+  async deleteQrCode(id: number): Promise<void> {
+    await db.delete(qrCodes).where(eq(qrCodes.id, id));
+  }
+
+  async updateQrCode(id: number, data: Partial<InsertQrCode>): Promise<QrCode> {
+    const [updated] = await db.update(qrCodes).set(data).where(eq(qrCodes.id, id)).returning();
+    return updated;
   }
 }
 
