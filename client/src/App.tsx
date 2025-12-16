@@ -16,7 +16,6 @@ import BasketScreen from "@/pages/basket";
 import CheckoutScreen from "@/pages/checkout";
 import SuccessScreen from "@/pages/success";
 import MyCodesScreen from "@/pages/my-codes";
-import AdminScreen from "@/pages/admin";
 import ProfileScreen from "@/pages/profile";
 
 function Router() {
@@ -30,7 +29,6 @@ function Router() {
         <Route path="/checkout" component={CheckoutScreen} />
         <Route path="/success" component={SuccessScreen} />
         <Route path="/my-codes" component={MyCodesScreen} />
-        <Route path="/admin" component={AdminScreen} />
         <Route path="/profile" component={ProfileScreen} />
         <Route component={NotFound} />
       </Switch>
