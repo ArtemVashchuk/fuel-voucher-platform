@@ -78,7 +78,9 @@ export default function CheckoutScreen() {
         for (let i = 0; i < item.quantity; i++) {
           const purchase = await createPurchase({
             packageId: item.package.id,
+            stationId: item.station.id,
             stationName: item.station.name,
+            fuelType: item.fuel.id,
             fuelName: item.fuel.name,
             liters: item.package.liters,
             price: item.package.price,

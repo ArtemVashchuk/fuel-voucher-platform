@@ -1,7 +1,9 @@
 
 interface PurchaseData {
   packageId: string;
+  stationId: string;
   stationName: string;
+  fuelType: string;
   fuelName: string;
   liters: number;
   price: number;
