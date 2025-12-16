@@ -57,7 +57,16 @@ app.post(
     try {
       const sig = Array.isArray(signature) ? signature[0] : signature;
       const { uuid } = req.params;
+      
       await WebhookHandlers.processWebhook(req.body as Buffer, sig, uuid);
+      
+      const event = JSON.parse(req.body.toString());
+      console.log('Webhook event received:', event.type);
+      
+      if (event.type === 'checkout.session.completed') {
+        await WebhookHandlers.handleCheckoutComplete(event.data.object);
+      }
+      
       res.status(200).json({ received: true });
     } catch (error: any) {
       console.error('Webhook error:', error.message);
