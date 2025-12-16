@@ -34,10 +34,20 @@ Preferred communication style: Simple, everyday language.
   - `fuel_packages`: Predefined pricing packages
 
 ### Key Design Patterns
-- **Monorepo Structure**: Client (`client/`), server (`server/`), and shared code (`shared/`)
+- **Multi-App Monorepo Structure**: 
+  - `client/`: Mobile-first user app (fuel purchasing)
+  - `admin-app/`: Separate admin panel for managing stations, fuel types, QR codes, packages
+  - `server/`: Shared Express backend API
+  - `shared/`: Shared TypeScript types and schema
 - **Path Aliases**: `@/*` for client source, `@shared/*` for shared modules
 - **Session-based User Tracking**: Uses browser-generated session IDs (no authentication currently)
 - **Mock Data Fallback**: Static mock data in `client/src/lib/mock-data.ts` for development
+
+### Admin App Architecture
+- **Location**: `admin-app/` directory with separate React app
+- **Port**: 5001 (development), proxied through nginx (Docker)
+- **Features**: Full CRUD for Stations, Fuel Types, QR Codes, Packages, Purchases view
+- **Deployment**: Separate Docker container running nginx to serve static build
 
 ### Development vs Production
 - Development: Vite dev server with HMR, served through Express middleware
