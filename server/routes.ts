@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertPurchaseSchema, insertQrCodeSchema, insertFuelPackageSchema } from "@shared/schema";
+import { insertPurchaseSchema, insertQrCodeSchema, insertFuelPackageSchema, insertStationSchema, insertFuelTypeSchema } from "@shared/schema";
 import { ZodError } from "zod";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { generateVerificationCode, sendVerificationCode } from "./twilio";
@@ -523,6 +523,118 @@ export async function registerRoutes(
         console.error("Error creating package:", error);
         res.status(500).json({ error: "Failed to create package" });
       }
+    }
+  });
+
+  app.put("/api/admin/packages/:id", async (req, res) => {
+    try {
+      const pkg = await storage.updatePackage(req.params.id, req.body);
+      res.json(pkg);
+    } catch (error) {
+      console.error("Error updating package:", error);
+      res.status(500).json({ error: "Failed to update package" });
+    }
+  });
+
+  app.delete("/api/admin/packages/:id", async (req, res) => {
+    try {
+      await storage.deletePackage(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting package:", error);
+      res.status(500).json({ error: "Failed to delete package" });
+    }
+  });
+
+  // Station CRUD routes
+  app.get("/api/admin/stations", async (req, res) => {
+    try {
+      const stationsList = await storage.getAllStations();
+      res.json(stationsList);
+    } catch (error) {
+      console.error("Error fetching stations:", error);
+      res.status(500).json({ error: "Failed to fetch stations" });
+    }
+  });
+
+  app.post("/api/admin/stations", async (req, res) => {
+    try {
+      const stationData = insertStationSchema.parse(req.body);
+      const station = await storage.createStation(stationData);
+      res.json(station);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        res.status(400).json({ error: "Invalid station data", details: error.errors });
+      } else {
+        console.error("Error creating station:", error);
+        res.status(500).json({ error: "Failed to create station" });
+      }
+    }
+  });
+
+  app.put("/api/admin/stations/:id", async (req, res) => {
+    try {
+      const station = await storage.updateStation(req.params.id, req.body);
+      res.json(station);
+    } catch (error) {
+      console.error("Error updating station:", error);
+      res.status(500).json({ error: "Failed to update station" });
+    }
+  });
+
+  app.delete("/api/admin/stations/:id", async (req, res) => {
+    try {
+      await storage.deleteStation(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting station:", error);
+      res.status(500).json({ error: "Failed to delete station" });
+    }
+  });
+
+  // Fuel Type CRUD routes
+  app.get("/api/admin/fuel-types", async (req, res) => {
+    try {
+      const types = await storage.getAllFuelTypes();
+      res.json(types);
+    } catch (error) {
+      console.error("Error fetching fuel types:", error);
+      res.status(500).json({ error: "Failed to fetch fuel types" });
+    }
+  });
+
+  app.post("/api/admin/fuel-types", async (req, res) => {
+    try {
+      const fuelTypeData = insertFuelTypeSchema.parse(req.body);
+      const fuelType = await storage.createFuelType(fuelTypeData);
+      res.json(fuelType);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        res.status(400).json({ error: "Invalid fuel type data", details: error.errors });
+      } else {
+        console.error("Error creating fuel type:", error);
+        res.status(500).json({ error: "Failed to create fuel type" });
+      }
+    }
+  });
+
+  app.put("/api/admin/fuel-types/:id", async (req, res) => {
+    try {
+      const fuelType = await storage.updateFuelType(req.params.id, req.body);
+      res.json(fuelType);
+    } catch (error) {
+      console.error("Error updating fuel type:", error);
+      res.status(500).json({ error: "Failed to update fuel type" });
+    }
+  });
+
+  app.delete("/api/admin/fuel-types/:id", async (req, res) => {
+    try {
+      await storage.deleteFuelType(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting fuel type:", error);
+      res.status(500).json({ error: "Failed to delete fuel type" });
     }
   });
 

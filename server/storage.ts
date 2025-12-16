@@ -7,6 +7,10 @@ import {
   type InsertPurchase,
   type FuelPackage,
   type InsertFuelPackage,
+  type Station,
+  type InsertStation,
+  type FuelType,
+  type InsertFuelType,
   type User,
   type UpsertUser,
   type PhoneVerification,
@@ -14,6 +18,8 @@ import {
   qrCodes,
   purchases,
   fuelPackages,
+  stations,
+  fuelTypes,
   users,
   phoneVerifications,
 } from "@shared/schema";
@@ -59,6 +65,24 @@ export interface IStorage {
   getAllPurchases(): Promise<Purchase[]>;
   deleteQrCode(id: number): Promise<void>;
   updateQrCode(id: number, data: Partial<InsertQrCode>): Promise<QrCode>;
+  
+  // Station operations
+  getAllStations(): Promise<Station[]>;
+  getStation(id: string): Promise<Station | undefined>;
+  createStation(station: InsertStation): Promise<Station>;
+  updateStation(id: string, data: Partial<InsertStation>): Promise<Station>;
+  deleteStation(id: string): Promise<void>;
+  
+  // Fuel Type operations
+  getAllFuelTypes(): Promise<FuelType[]>;
+  getFuelTypesByStation(stationId: string): Promise<FuelType[]>;
+  createFuelType(fuelType: InsertFuelType): Promise<FuelType>;
+  updateFuelType(id: string, data: Partial<InsertFuelType>): Promise<FuelType>;
+  deleteFuelType(id: string): Promise<void>;
+  
+  // Package operations
+  deletePackage(id: string): Promise<void>;
+  updatePackage(id: string, data: Partial<InsertFuelPackage>): Promise<FuelPackage>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -256,6 +280,63 @@ export class DatabaseStorage implements IStorage {
 
   async updateQrCode(id: number, data: Partial<InsertQrCode>): Promise<QrCode> {
     const [updated] = await db.update(qrCodes).set(data).where(eq(qrCodes.id, id)).returning();
+    return updated;
+  }
+
+  // Station Methods
+  async getAllStations(): Promise<Station[]> {
+    return await db.select().from(stations).orderBy(stations.name);
+  }
+
+  async getStation(id: string): Promise<Station | undefined> {
+    const [station] = await db.select().from(stations).where(eq(stations.id, id));
+    return station;
+  }
+
+  async createStation(station: InsertStation): Promise<Station> {
+    const [created] = await db.insert(stations).values(station).returning();
+    return created;
+  }
+
+  async updateStation(id: string, data: Partial<InsertStation>): Promise<Station> {
+    const [updated] = await db.update(stations).set(data).where(eq(stations.id, id)).returning();
+    return updated;
+  }
+
+  async deleteStation(id: string): Promise<void> {
+    await db.delete(stations).where(eq(stations.id, id));
+  }
+
+  // Fuel Type Methods
+  async getAllFuelTypes(): Promise<FuelType[]> {
+    return await db.select().from(fuelTypes).orderBy(fuelTypes.name);
+  }
+
+  async getFuelTypesByStation(stationId: string): Promise<FuelType[]> {
+    return await db.select().from(fuelTypes).where(eq(fuelTypes.stationId, stationId));
+  }
+
+  async createFuelType(fuelType: InsertFuelType): Promise<FuelType> {
+    const [created] = await db.insert(fuelTypes).values(fuelType).returning();
+    return created;
+  }
+
+  async updateFuelType(id: string, data: Partial<InsertFuelType>): Promise<FuelType> {
+    const [updated] = await db.update(fuelTypes).set(data).where(eq(fuelTypes.id, id)).returning();
+    return updated;
+  }
+
+  async deleteFuelType(id: string): Promise<void> {
+    await db.delete(fuelTypes).where(eq(fuelTypes.id, id));
+  }
+
+  // Additional Package Methods
+  async deletePackage(id: string): Promise<void> {
+    await db.delete(fuelPackages).where(eq(fuelPackages.id, id));
+  }
+
+  async updatePackage(id: string, data: Partial<InsertFuelPackage>): Promise<FuelPackage> {
+    const [updated] = await db.update(fuelPackages).set(data).where(eq(fuelPackages.id, id)).returning();
     return updated;
   }
 }

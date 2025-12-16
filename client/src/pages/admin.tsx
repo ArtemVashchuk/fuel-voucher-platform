@@ -1,11 +1,27 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Upload, Trash2, Package, QrCode, ShoppingCart, Plus } from "lucide-react";
-import { STATIONS } from "@/lib/mock-data";
+import { Trash2, Package, QrCode, ShoppingCart, Plus, Building, Fuel, Edit2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { apiRequest } from "@/lib/queryClient";
+
+type StationType = {
+  id: string;
+  name: string;
+  color: string;
+  logoText: string;
+  createdAt: string;
+};
+
+type FuelTypeType = {
+  id: string;
+  name: string;
+  stationId: string;
+  basePrice: number;
+  discountPrice: number;
+  createdAt: string;
+};
 
 type QrCodeType = {
   id: number;
@@ -42,8 +58,19 @@ type PackageType = {
 
 export default function AdminScreen() {
   const queryClient = useQueryClient();
-  const [newQr, setNewQr] = useState({ stationId: "okko", fuelType: "a95", liters: 10, qrCodeUrl: "" });
-  const [newPackage, setNewPackage] = useState({ id: "", stationId: "okko", fuelTypeId: "a95", fuelName: "A-95", liters: 10, price: 0, originalPrice: 0 });
+  
+  const [newStation, setNewStation] = useState({ id: "", name: "", color: "#00ff80", logoText: "" });
+  const [newFuelType, setNewFuelType] = useState({ id: "", name: "", stationId: "", basePrice: 0, discountPrice: 0 });
+  const [newQr, setNewQr] = useState({ stationId: "", fuelType: "", liters: 10, qrCodeUrl: "" });
+  const [newPackage, setNewPackage] = useState({ id: "", stationId: "", fuelTypeId: "", fuelName: "", liters: 10, price: 0, originalPrice: 0 });
+
+  const { data: stationsList = [] } = useQuery<StationType[]>({
+    queryKey: ["/api/admin/stations"],
+  });
+
+  const { data: fuelTypesList = [] } = useQuery<FuelTypeType[]>({
+    queryKey: ["/api/admin/fuel-types"],
+  });
 
   const { data: qrCodes = [] } = useQuery<QrCodeType[]>({
     queryKey: ["/api/admin/qr-codes"],
@@ -55,6 +82,46 @@ export default function AdminScreen() {
 
   const { data: packages = [] } = useQuery<PackageType[]>({
     queryKey: ["/api/admin/packages"],
+  });
+
+  const createStationMutation = useMutation({
+    mutationFn: async (data: typeof newStation) => {
+      const res = await apiRequest("POST", "/api/admin/stations", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/stations"] });
+      setNewStation({ id: "", name: "", color: "#00ff80", logoText: "" });
+    },
+  });
+
+  const deleteStationMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/admin/stations/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/stations"] });
+    },
+  });
+
+  const createFuelTypeMutation = useMutation({
+    mutationFn: async (data: typeof newFuelType) => {
+      const res = await apiRequest("POST", "/api/admin/fuel-types", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/fuel-types"] });
+      setNewFuelType({ id: "", name: "", stationId: "", basePrice: 0, discountPrice: 0 });
+    },
+  });
+
+  const deleteFuelTypeMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/admin/fuel-types/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/fuel-types"] });
+    },
   });
 
   const createQrMutation = useMutation({
@@ -84,26 +151,39 @@ export default function AdminScreen() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/packages"] });
-      setNewPackage({ id: "", stationId: "okko", fuelTypeId: "a95", fuelName: "A-95", liters: 10, price: 0, originalPrice: 0 });
+      setNewPackage({ id: "", stationId: "", fuelTypeId: "", fuelName: "", liters: 10, price: 0, originalPrice: 0 });
     },
   });
 
-  const fuelTypes = [
-    { id: "a95", name: "A-95" },
-    { id: "a92", name: "A-92" },
-    { id: "diesel", name: "Diesel" },
-    { id: "gas", name: "LPG Gas" },
-  ];
+  const deletePackageMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/admin/packages/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/packages"] });
+    },
+  });
+
+  const availableQrs = qrCodes.filter(q => q.status === "available");
+  const soldQrs = qrCodes.filter(q => q.status === "sold");
 
   return (
     <div className="min-h-screen bg-black text-white p-6">
       <header className="mb-8">
         <h1 className="text-3xl font-bold text-primary font-heading">ADMIN PANEL</h1>
-        <p className="text-gray-400">Manage QR codes, packages, and view purchases</p>
+        <p className="text-gray-400">Manage stations, fuel types, QR codes, packages, and view purchases</p>
       </header>
 
-      <Tabs defaultValue="qrcodes" className="space-y-6">
-        <TabsList className="bg-gray-900 border border-gray-800">
+      <Tabs defaultValue="stations" className="space-y-6">
+        <TabsList className="bg-gray-900 border border-gray-800 flex-wrap">
+          <TabsTrigger value="stations" className="data-[state=active]:bg-primary data-[state=active]:text-black">
+            <Building className="w-4 h-4 mr-2" />
+            Stations
+          </TabsTrigger>
+          <TabsTrigger value="fueltypes" className="data-[state=active]:bg-primary data-[state=active]:text-black">
+            <Fuel className="w-4 h-4 mr-2" />
+            Fuel Types
+          </TabsTrigger>
           <TabsTrigger value="qrcodes" className="data-[state=active]:bg-primary data-[state=active]:text-black">
             <QrCode className="w-4 h-4 mr-2" />
             QR Codes
@@ -118,7 +198,209 @@ export default function AdminScreen() {
           </TabsTrigger>
         </TabsList>
 
+        <TabsContent value="stations" className="space-y-6">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+            <h2 className="text-xl font-bold mb-4">Add New Station</h2>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <Input
+                placeholder="Station ID (e.g. okko)"
+                value={newStation.id}
+                onChange={(e) => setNewStation({ ...newStation, id: e.target.value.toLowerCase() })}
+                className="bg-gray-800 border-gray-700"
+                data-testid="input-station-id"
+              />
+              <Input
+                placeholder="Station Name (e.g. OKKO)"
+                value={newStation.name}
+                onChange={(e) => setNewStation({ ...newStation, name: e.target.value })}
+                className="bg-gray-800 border-gray-700"
+                data-testid="input-station-name"
+              />
+              <Input
+                placeholder="Logo Text"
+                value={newStation.logoText}
+                onChange={(e) => setNewStation({ ...newStation, logoText: e.target.value })}
+                className="bg-gray-800 border-gray-700"
+                data-testid="input-station-logo"
+              />
+              <Input
+                type="color"
+                value={newStation.color}
+                onChange={(e) => setNewStation({ ...newStation, color: e.target.value })}
+                className="bg-gray-800 border-gray-700 h-10"
+                data-testid="input-station-color"
+              />
+              <Button
+                onClick={() => createStationMutation.mutate(newStation)}
+                disabled={!newStation.id || !newStation.name || createStationMutation.isPending}
+                className="bg-primary text-black hover:bg-primary/80"
+                data-testid="button-add-station"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Station
+              </Button>
+            </div>
+          </div>
+
+          <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-gray-800">
+                <tr>
+                  <th className="text-left p-4">ID</th>
+                  <th className="text-left p-4">Name</th>
+                  <th className="text-left p-4">Logo</th>
+                  <th className="text-left p-4">Color</th>
+                  <th className="text-left p-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stationsList.map((station) => (
+                  <tr key={station.id} className="border-t border-gray-800" data-testid={`row-station-${station.id}`}>
+                    <td className="p-4 font-mono">{station.id}</td>
+                    <td className="p-4 font-bold">{station.name}</td>
+                    <td className="p-4">{station.logoText}</td>
+                    <td className="p-4">
+                      <span className="inline-block w-6 h-6 rounded" style={{ backgroundColor: station.color }}></span>
+                    </td>
+                    <td className="p-4">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deleteStationMutation.mutate(station.id)}
+                        className="text-red-400 hover:text-red-300"
+                        data-testid={`button-delete-station-${station.id}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+                {stationsList.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="p-8 text-center text-gray-500">
+                      No stations yet. Add some above.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="fueltypes" className="space-y-6">
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+            <h2 className="text-xl font-bold mb-4">Add New Fuel Type</h2>
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+              <Input
+                placeholder="Fuel ID (e.g. a95)"
+                value={newFuelType.id}
+                onChange={(e) => setNewFuelType({ ...newFuelType, id: e.target.value.toLowerCase() })}
+                className="bg-gray-800 border-gray-700"
+                data-testid="input-fuel-id"
+              />
+              <Input
+                placeholder="Name (e.g. A-95)"
+                value={newFuelType.name}
+                onChange={(e) => setNewFuelType({ ...newFuelType, name: e.target.value })}
+                className="bg-gray-800 border-gray-700"
+                data-testid="input-fuel-name"
+              />
+              <select
+                value={newFuelType.stationId}
+                onChange={(e) => setNewFuelType({ ...newFuelType, stationId: e.target.value })}
+                className="bg-gray-800 border border-gray-700 rounded-lg p-2 text-white"
+                data-testid="select-fuel-station"
+              >
+                <option value="">Select Station</option>
+                {stationsList.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+              <Input
+                type="number"
+                placeholder="Base Price"
+                value={newFuelType.basePrice || ""}
+                onChange={(e) => setNewFuelType({ ...newFuelType, basePrice: parseInt(e.target.value) || 0 })}
+                className="bg-gray-800 border-gray-700"
+                data-testid="input-fuel-base-price"
+              />
+              <Input
+                type="number"
+                placeholder="Discount Price"
+                value={newFuelType.discountPrice || ""}
+                onChange={(e) => setNewFuelType({ ...newFuelType, discountPrice: parseInt(e.target.value) || 0 })}
+                className="bg-gray-800 border-gray-700"
+                data-testid="input-fuel-discount-price"
+              />
+              <Button
+                onClick={() => createFuelTypeMutation.mutate(newFuelType)}
+                disabled={!newFuelType.id || !newFuelType.name || !newFuelType.stationId || createFuelTypeMutation.isPending}
+                className="bg-primary text-black hover:bg-primary/80"
+                data-testid="button-add-fuel-type"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add
+              </Button>
+            </div>
+          </div>
+
+          <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-gray-800">
+                <tr>
+                  <th className="text-left p-4">ID</th>
+                  <th className="text-left p-4">Name</th>
+                  <th className="text-left p-4">Station</th>
+                  <th className="text-left p-4">Base Price</th>
+                  <th className="text-left p-4">Discount Price</th>
+                  <th className="text-left p-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {fuelTypesList.map((fuel) => (
+                  <tr key={fuel.id} className="border-t border-gray-800" data-testid={`row-fuel-${fuel.id}`}>
+                    <td className="p-4 font-mono">{fuel.id}</td>
+                    <td className="p-4 font-bold">{fuel.name}</td>
+                    <td className="p-4">{stationsList.find(s => s.id === fuel.stationId)?.name || fuel.stationId}</td>
+                    <td className="p-4 text-gray-400">{fuel.basePrice} UAH</td>
+                    <td className="p-4 text-primary font-bold">{fuel.discountPrice} UAH</td>
+                    <td className="p-4">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deleteFuelTypeMutation.mutate(fuel.id)}
+                        className="text-red-400 hover:text-red-300"
+                        data-testid={`button-delete-fuel-${fuel.id}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+                {fuelTypesList.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-gray-500">
+                      No fuel types yet. Add some above.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </TabsContent>
+
         <TabsContent value="qrcodes" className="space-y-6">
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="bg-green-500/20 border border-green-500/30 rounded-xl p-4">
+              <div className="text-3xl font-bold text-green-400">{availableQrs.length}</div>
+              <div className="text-gray-400">Available QRs</div>
+            </div>
+            <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-4">
+              <div className="text-3xl font-bold text-red-400">{soldQrs.length}</div>
+              <div className="text-gray-400">Sold QRs</div>
+            </div>
+          </div>
+
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
             <h2 className="text-xl font-bold mb-4">Add New QR Code</h2>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -126,9 +408,10 @@ export default function AdminScreen() {
                 value={newQr.stationId}
                 onChange={(e) => setNewQr({ ...newQr, stationId: e.target.value })}
                 className="bg-gray-800 border border-gray-700 rounded-lg p-2 text-white"
-                data-testid="select-station"
+                data-testid="select-qr-station"
               >
-                {STATIONS.map((s) => (
+                <option value="">Select Station</option>
+                {stationsList.map((s) => (
                   <option key={s.id} value={s.id}>{s.name}</option>
                 ))}
               </select>
@@ -136,24 +419,27 @@ export default function AdminScreen() {
                 value={newQr.fuelType}
                 onChange={(e) => setNewQr({ ...newQr, fuelType: e.target.value })}
                 className="bg-gray-800 border border-gray-700 rounded-lg p-2 text-white"
-                data-testid="select-fuel"
+                data-testid="select-qr-fuel"
               >
-                {fuelTypes.map((f) => (
-                  <option key={f.id} value={f.id}>{f.name}</option>
-                ))}
+                <option value="">Select Fuel</option>
+                {fuelTypesList
+                  .filter(f => !newQr.stationId || f.stationId === newQr.stationId)
+                  .map((f) => (
+                    <option key={f.id} value={f.id}>{f.name}</option>
+                  ))}
               </select>
               <select
                 value={newQr.liters}
                 onChange={(e) => setNewQr({ ...newQr, liters: parseInt(e.target.value) })}
                 className="bg-gray-800 border border-gray-700 rounded-lg p-2 text-white"
-                data-testid="select-liters"
+                data-testid="select-qr-liters"
               >
                 <option value={10}>10 L</option>
                 <option value={20}>20 L</option>
                 <option value={50}>50 L</option>
               </select>
               <Input
-                placeholder="QR Code URL"
+                placeholder="QR Code URL or Image URL"
                 value={newQr.qrCodeUrl}
                 onChange={(e) => setNewQr({ ...newQr, qrCodeUrl: e.target.value })}
                 className="bg-gray-800 border-gray-700"
@@ -161,7 +447,7 @@ export default function AdminScreen() {
               />
               <Button
                 onClick={() => createQrMutation.mutate(newQr)}
-                disabled={!newQr.qrCodeUrl || createQrMutation.isPending}
+                disabled={!newQr.stationId || !newQr.fuelType || !newQr.qrCodeUrl || createQrMutation.isPending}
                 className="bg-primary text-black hover:bg-primary/80"
                 data-testid="button-add-qr"
               >
@@ -179,6 +465,7 @@ export default function AdminScreen() {
                   <th className="text-left p-4">Station</th>
                   <th className="text-left p-4">Fuel</th>
                   <th className="text-left p-4">Liters</th>
+                  <th className="text-left p-4">QR Preview</th>
                   <th className="text-left p-4">Status</th>
                   <th className="text-left p-4">Actions</th>
                 </tr>
@@ -187,9 +474,16 @@ export default function AdminScreen() {
                 {qrCodes.map((qr) => (
                   <tr key={qr.id} className="border-t border-gray-800" data-testid={`row-qr-${qr.id}`}>
                     <td className="p-4">{qr.id}</td>
-                    <td className="p-4">{qr.stationId}</td>
-                    <td className="p-4">{qr.fuelType}</td>
+                    <td className="p-4">{stationsList.find(s => s.id === qr.stationId)?.name || qr.stationId}</td>
+                    <td className="p-4">{fuelTypesList.find(f => f.id === qr.fuelType)?.name || qr.fuelType}</td>
                     <td className="p-4">{qr.liters}L</td>
+                    <td className="p-4">
+                      {qr.qrCodeUrl.startsWith("http") ? (
+                        <img src={qr.qrCodeUrl} alt="QR" className="w-10 h-10 object-cover rounded" />
+                      ) : (
+                        <span className="text-xs text-gray-500 truncate max-w-[100px] block">{qr.qrCodeUrl}</span>
+                      )}
+                    </td>
                     <td className="p-4">
                       <span className={`px-2 py-1 rounded text-xs ${qr.status === "available" ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"}`}>
                         {qr.status}
@@ -211,7 +505,7 @@ export default function AdminScreen() {
                 ))}
                 {qrCodes.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-gray-500">
+                    <td colSpan={7} className="p-8 text-center text-gray-500">
                       No QR codes yet. Add some above.
                     </td>
                   </tr>
@@ -236,27 +530,34 @@ export default function AdminScreen() {
                 value={newPackage.stationId}
                 onChange={(e) => setNewPackage({ ...newPackage, stationId: e.target.value })}
                 className="bg-gray-800 border border-gray-700 rounded-lg p-2 text-white"
+                data-testid="select-package-station"
               >
-                {STATIONS.map((s) => (
+                <option value="">Select Station</option>
+                {stationsList.map((s) => (
                   <option key={s.id} value={s.id}>{s.name}</option>
                 ))}
               </select>
               <select
                 value={newPackage.fuelTypeId}
                 onChange={(e) => {
-                  const fuel = fuelTypes.find(f => f.id === e.target.value);
+                  const fuel = fuelTypesList.find(f => f.id === e.target.value);
                   setNewPackage({ ...newPackage, fuelTypeId: e.target.value, fuelName: fuel?.name || "" });
                 }}
                 className="bg-gray-800 border border-gray-700 rounded-lg p-2 text-white"
+                data-testid="select-package-fuel"
               >
-                {fuelTypes.map((f) => (
-                  <option key={f.id} value={f.id}>{f.name}</option>
-                ))}
+                <option value="">Select Fuel</option>
+                {fuelTypesList
+                  .filter(f => !newPackage.stationId || f.stationId === newPackage.stationId)
+                  .map((f) => (
+                    <option key={f.id} value={f.id}>{f.name}</option>
+                  ))}
               </select>
               <select
                 value={newPackage.liters}
                 onChange={(e) => setNewPackage({ ...newPackage, liters: parseInt(e.target.value) })}
                 className="bg-gray-800 border border-gray-700 rounded-lg p-2 text-white"
+                data-testid="select-package-liters"
               >
                 <option value={10}>10 L</option>
                 <option value={20}>20 L</option>
@@ -282,7 +583,7 @@ export default function AdminScreen() {
               />
               <Button
                 onClick={() => createPackageMutation.mutate(newPackage)}
-                disabled={!newPackage.id || !newPackage.price || createPackageMutation.isPending}
+                disabled={!newPackage.id || !newPackage.stationId || !newPackage.price || createPackageMutation.isPending}
                 className="bg-primary text-black hover:bg-primary/80"
                 data-testid="button-add-package"
               >
@@ -302,22 +603,34 @@ export default function AdminScreen() {
                   <th className="text-left p-4">Liters</th>
                   <th className="text-left p-4">Price</th>
                   <th className="text-left p-4">Original</th>
+                  <th className="text-left p-4">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {packages.map((pkg) => (
                   <tr key={pkg.id} className="border-t border-gray-800" data-testid={`row-package-${pkg.id}`}>
                     <td className="p-4 font-mono text-sm">{pkg.id}</td>
-                    <td className="p-4">{pkg.stationId}</td>
+                    <td className="p-4">{stationsList.find(s => s.id === pkg.stationId)?.name || pkg.stationId}</td>
                     <td className="p-4">{pkg.fuelName}</td>
                     <td className="p-4">{pkg.liters}L</td>
                     <td className="p-4 text-primary font-bold">{pkg.price} UAH</td>
                     <td className="p-4 text-gray-500 line-through">{pkg.originalPrice} UAH</td>
+                    <td className="p-4">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deletePackageMutation.mutate(pkg.id)}
+                        className="text-red-400 hover:text-red-300"
+                        data-testid={`button-delete-package-${pkg.id}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </td>
                   </tr>
                 ))}
                 {packages.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-gray-500">
+                    <td colSpan={7} className="p-8 text-center text-gray-500">
                       No packages yet. Add some above.
                     </td>
                   </tr>
@@ -353,6 +666,7 @@ export default function AdminScreen() {
                       <span className={`px-2 py-1 rounded text-xs ${
                         purchase.status === "delivered" ? "bg-green-500/20 text-green-400" :
                         purchase.status === "pending" ? "bg-yellow-500/20 text-yellow-400" :
+                        purchase.status === "pending_qr" ? "bg-orange-500/20 text-orange-400" :
                         "bg-red-500/20 text-red-400"
                       }`}>
                         {purchase.status}

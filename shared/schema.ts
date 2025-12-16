@@ -46,6 +46,37 @@ export const insertPhoneVerificationSchema = createInsertSchema(phoneVerificatio
 export type InsertPhoneVerification = z.infer<typeof insertPhoneVerificationSchema>;
 export type PhoneVerification = typeof phoneVerifications.$inferSelect;
 
+// Stations
+export const stations = pgTable("stations", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  color: text("color").notNull().default("#00ff80"),
+  logoText: text("logo_text").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertStationSchema = createInsertSchema(stations).omit({
+  createdAt: true,
+});
+export type InsertStation = z.infer<typeof insertStationSchema>;
+export type Station = typeof stations.$inferSelect;
+
+// Fuel Types
+export const fuelTypes = pgTable("fuel_types", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  stationId: text("station_id").notNull(),
+  basePrice: integer("base_price").notNull(),
+  discountPrice: integer("discount_price").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertFuelTypeSchema = createInsertSchema(fuelTypes).omit({
+  createdAt: true,
+});
+export type InsertFuelType = z.infer<typeof insertFuelTypeSchema>;
+export type FuelType = typeof fuelTypes.$inferSelect;
+
 // QR Codes Inventory
 export const qrCodes = pgTable("qr_codes", {
   id: serial("id").primaryKey(),
