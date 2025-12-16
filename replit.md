@@ -58,3 +58,27 @@ Preferred communication style: Simple, everyday language.
 - `@replit/vite-plugin-cartographer`: Dev tooling
 - `@replit/vite-plugin-dev-banner`: Development indicator
 - `connect-pg-simple`: PostgreSQL session store (prepared for future auth)
+
+## Docker Deployment
+
+The application supports running entirely outside of Replit using Docker.
+
+### Files
+- `docker-compose.yml`: Service orchestration (backend, PostgreSQL, migrations)
+- `Dockerfile`: Multi-stage build for production
+- `.env.example`: Environment variable template
+- `DOCKER.md`: Detailed deployment instructions
+
+### Quick Start
+```bash
+cp .env.example .env
+# Edit .env with your credentials
+docker-compose up -d
+docker-compose run --rm migrate
+```
+
+### Environment Variables (Docker)
+- `POSTGRES_*`: Database configuration
+- `SESSION_SECRET`: Express session secret
+- `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`: Stripe credentials
+- `TWILIO_*`: SMS verification (optional)

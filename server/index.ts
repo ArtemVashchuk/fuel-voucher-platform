@@ -2,8 +2,8 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
-import { runMigrations } from 'stripe-replit-sync';
-import { getStripeSync } from "./stripeClient";
+import Stripe from "stripe";
+import { getStripeSync, getWebhookSecret, getUncachableStripeClient } from "./stripeClient";
 import { WebhookHandlers } from "./webhookHandlers";
 
 const app = express();
@@ -15,6 +15,10 @@ declare module "http" {
   }
 }
 
+function isReplitEnvironment(): boolean {
+  return !!(process.env.REPLIT_CONNECTORS_HOSTNAME && (process.env.REPL_IDENTITY || process.env.WEB_REPL_RENEWAL));
+}
+
 async function initStripe() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
@@ -23,27 +27,36 @@ async function initStripe() {
   }
 
   try {
-    console.log('Initializing Stripe schema...');
-    await runMigrations({ databaseUrl });
-    console.log('Stripe schema ready');
+    if (isReplitEnvironment()) {
+      const { runMigrations } = await import('stripe-replit-sync');
+      console.log('Initializing Stripe schema...');
+      await runMigrations({ databaseUrl });
+      console.log('Stripe schema ready');
 
-    const stripeSync = await getStripeSync();
+      const stripeSync = await getStripeSync();
 
-    console.log('Setting up managed webhook...');
-    const webhookBaseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
-    const { webhook, uuid } = await stripeSync.findOrCreateManagedWebhook(
-      `${webhookBaseUrl}/api/stripe/webhook`,
-      { enabled_events: ['*'], description: 'Managed webhook for fuel purchases' }
-    );
-    console.log(`Webhook configured: ${webhook.url}`);
+      console.log('Setting up managed webhook...');
+      const webhookBaseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
+      const { webhook, uuid } = await stripeSync.findOrCreateManagedWebhook(
+        `${webhookBaseUrl}/api/stripe/webhook`,
+        { enabled_events: ['*'], description: 'Managed webhook for fuel purchases' }
+      );
+      console.log(`Webhook configured: ${webhook.url}`);
 
-    stripeSync.syncBackfill()
-      .then(() => console.log('Stripe data synced'))
-      .catch((err: Error) => console.error('Error syncing Stripe data:', err));
+      stripeSync.syncBackfill()
+        .then(() => console.log('Stripe data synced'))
+        .catch((err: Error) => console.error('Error syncing Stripe data:', err));
+    } else {
+      console.log('Running in standalone mode - Stripe configured via environment variables');
+    }
   } catch (error) {
     console.error('Failed to initialize Stripe:', error);
   }
 }
+
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 await initStripe();
 
@@ -61,6 +74,39 @@ app.post(
       await WebhookHandlers.processWebhook(req.body as Buffer, sig, uuid);
       
       const event = JSON.parse(req.body.toString());
+      console.log('Webhook event received:', event.type);
+      
+      if (event.type === 'checkout.session.completed') {
+        await WebhookHandlers.handleCheckoutComplete(event.data.object);
+      }
+      
+      res.status(200).json({ received: true });
+    } catch (error: any) {
+      console.error('Webhook error:', error.message);
+      res.status(400).json({ error: 'Webhook processing error' });
+    }
+  }
+);
+
+app.post(
+  '/api/stripe/webhook',
+  express.raw({ type: 'application/json' }),
+  async (req, res) => {
+    const signature = req.headers['stripe-signature'];
+    if (!signature) return res.status(400).json({ error: 'Missing signature' });
+
+    try {
+      const sig = Array.isArray(signature) ? signature[0] : signature;
+      const webhookSecret = getWebhookSecret();
+      
+      if (!webhookSecret) {
+        console.error('STRIPE_WEBHOOK_SECRET not configured');
+        return res.status(500).json({ error: 'Webhook not configured' });
+      }
+      
+      const stripe = await getUncachableStripeClient();
+      const event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+      
       console.log('Webhook event received:', event.type);
       
       if (event.type === 'checkout.session.completed') {

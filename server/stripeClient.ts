@@ -2,7 +2,22 @@ import Stripe from 'stripe';
 
 let connectionSettings: any;
 
+function isReplitEnvironment(): boolean {
+  return !!(process.env.REPLIT_CONNECTORS_HOSTNAME && (process.env.REPL_IDENTITY || process.env.WEB_REPL_RENEWAL));
+}
+
 async function getCredentials() {
+  if (!isReplitEnvironment()) {
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    const publishableKey = process.env.STRIPE_PUBLISHABLE_KEY;
+    
+    if (!secretKey || !publishableKey) {
+      throw new Error('STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY environment variables are required');
+    }
+    
+    return { publishableKey, secretKey };
+  }
+
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
   const xReplitToken = process.env.REPL_IDENTITY
     ? 'repl ' + process.env.REPL_IDENTITY
@@ -63,16 +78,27 @@ let stripeSync: any = null;
 
 export async function getStripeSync() {
   if (!stripeSync) {
-    const { StripeSync } = await import('stripe-replit-sync');
-    const secretKey = await getStripeSecretKey();
+    if (isReplitEnvironment()) {
+      const { StripeSync } = await import('stripe-replit-sync');
+      const secretKey = await getStripeSecretKey();
 
-    stripeSync = new StripeSync({
-      poolConfig: {
-        connectionString: process.env.DATABASE_URL!,
-        max: 2,
-      },
-      stripeSecretKey: secretKey,
-    });
+      stripeSync = new StripeSync({
+        poolConfig: {
+          connectionString: process.env.DATABASE_URL!,
+          max: 2,
+        },
+        stripeSecretKey: secretKey,
+      });
+    } else {
+      stripeSync = {
+        processWebhook: async () => {},
+        sync: async () => {},
+      };
+    }
   }
   return stripeSync;
+}
+
+export function getWebhookSecret(): string {
+  return process.env.STRIPE_WEBHOOK_SECRET || '';
 }
