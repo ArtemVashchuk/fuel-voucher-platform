@@ -60,7 +60,9 @@ export default function AdminScreen() {
   const queryClient = useQueryClient();
   
   const [newStation, setNewStation] = useState({ id: "", name: "", color: "#00ff80", logoText: "" });
+  const [editingStation, setEditingStation] = useState<StationType | null>(null);
   const [newFuelType, setNewFuelType] = useState({ id: "", name: "", stationId: "", basePrice: 0, discountPrice: 0 });
+  const [editingFuelType, setEditingFuelType] = useState<FuelTypeType | null>(null);
   const [newQr, setNewQr] = useState({ stationId: "", fuelType: "", liters: 10, qrCodeUrl: "" });
   const [newPackage, setNewPackage] = useState({ id: "", stationId: "", fuelTypeId: "", fuelName: "", liters: 10, price: 0, originalPrice: 0 });
 
@@ -121,6 +123,28 @@ export default function AdminScreen() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/fuel-types"] });
+    },
+  });
+
+  const updateStationMutation = useMutation({
+    mutationFn: async (data: StationType) => {
+      const res = await apiRequest("PUT", `/api/admin/stations/${data.id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/stations"] });
+      setEditingStation(null);
+    },
+  });
+
+  const updateFuelTypeMutation = useMutation({
+    mutationFn: async (data: FuelTypeType) => {
+      const res = await apiRequest("PUT", `/api/admin/fuel-types/${data.id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/fuel-types"] });
+      setEditingFuelType(null);
     },
   });
 
@@ -255,25 +279,66 @@ export default function AdminScreen() {
               </thead>
               <tbody>
                 {stationsList.map((station) => (
-                  <tr key={station.id} className="border-t border-gray-800" data-testid={`row-station-${station.id}`}>
-                    <td className="p-4 font-mono">{station.id}</td>
-                    <td className="p-4 font-bold">{station.name}</td>
-                    <td className="p-4">{station.logoText}</td>
-                    <td className="p-4">
-                      <span className="inline-block w-6 h-6 rounded" style={{ backgroundColor: station.color }}></span>
-                    </td>
-                    <td className="p-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deleteStationMutation.mutate(station.id)}
-                        className="text-red-400 hover:text-red-300"
-                        data-testid={`button-delete-station-${station.id}`}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </td>
-                  </tr>
+                  editingStation?.id === station.id ? (
+                    <tr key={station.id} className="border-t border-gray-800 bg-gray-800/50" data-testid={`row-station-${station.id}-editing`}>
+                      <td className="p-4 font-mono">{station.id}</td>
+                      <td className="p-2">
+                        <Input
+                          value={editingStation.name}
+                          onChange={(e) => setEditingStation({ ...editingStation, name: e.target.value })}
+                          className="bg-gray-700 border-gray-600"
+                        />
+                      </td>
+                      <td className="p-2">
+                        <Input
+                          value={editingStation.logoText}
+                          onChange={(e) => setEditingStation({ ...editingStation, logoText: e.target.value })}
+                          className="bg-gray-700 border-gray-600"
+                        />
+                      </td>
+                      <td className="p-2">
+                        <Input
+                          type="color"
+                          value={editingStation.color}
+                          onChange={(e) => setEditingStation({ ...editingStation, color: e.target.value })}
+                          className="bg-gray-700 border-gray-600 h-8 w-12"
+                        />
+                      </td>
+                      <td className="p-4 flex gap-2">
+                        <Button size="sm" onClick={() => updateStationMutation.mutate(editingStation)} className="bg-primary text-black">Save</Button>
+                        <Button size="sm" variant="ghost" onClick={() => setEditingStation(null)}>Cancel</Button>
+                      </td>
+                    </tr>
+                  ) : (
+                    <tr key={station.id} className="border-t border-gray-800" data-testid={`row-station-${station.id}`}>
+                      <td className="p-4 font-mono">{station.id}</td>
+                      <td className="p-4 font-bold">{station.name}</td>
+                      <td className="p-4">{station.logoText}</td>
+                      <td className="p-4">
+                        <span className="inline-block w-6 h-6 rounded" style={{ backgroundColor: station.color }}></span>
+                      </td>
+                      <td className="p-4 flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setEditingStation(station)}
+                          className="text-blue-400 hover:text-blue-300"
+                          data-testid={`button-edit-station-${station.id}`}
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteStationMutation.mutate(station.id)}
+                          className="text-red-400 hover:text-red-300"
+                          data-testid={`button-delete-station-${station.id}`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  )
                 ))}
                 {stationsList.length === 0 && (
                   <tr>
@@ -358,24 +423,67 @@ export default function AdminScreen() {
               </thead>
               <tbody>
                 {fuelTypesList.map((fuel) => (
-                  <tr key={fuel.id} className="border-t border-gray-800" data-testid={`row-fuel-${fuel.id}`}>
-                    <td className="p-4 font-mono">{fuel.id}</td>
-                    <td className="p-4 font-bold">{fuel.name}</td>
-                    <td className="p-4">{stationsList.find(s => s.id === fuel.stationId)?.name || fuel.stationId}</td>
-                    <td className="p-4 text-gray-400">{fuel.basePrice} UAH</td>
-                    <td className="p-4 text-primary font-bold">{fuel.discountPrice} UAH</td>
-                    <td className="p-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deleteFuelTypeMutation.mutate(fuel.id)}
-                        className="text-red-400 hover:text-red-300"
-                        data-testid={`button-delete-fuel-${fuel.id}`}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </td>
-                  </tr>
+                  editingFuelType?.id === fuel.id ? (
+                    <tr key={fuel.id} className="border-t border-gray-800 bg-gray-800/50" data-testid={`row-fuel-${fuel.id}-editing`}>
+                      <td className="p-4 font-mono">{fuel.id}</td>
+                      <td className="p-2">
+                        <Input
+                          value={editingFuelType.name}
+                          onChange={(e) => setEditingFuelType({ ...editingFuelType, name: e.target.value })}
+                          className="bg-gray-700 border-gray-600"
+                        />
+                      </td>
+                      <td className="p-4">{stationsList.find(s => s.id === fuel.stationId)?.name || fuel.stationId}</td>
+                      <td className="p-2">
+                        <Input
+                          type="number"
+                          value={editingFuelType.basePrice}
+                          onChange={(e) => setEditingFuelType({ ...editingFuelType, basePrice: parseInt(e.target.value) || 0 })}
+                          className="bg-gray-700 border-gray-600 w-24"
+                        />
+                      </td>
+                      <td className="p-2">
+                        <Input
+                          type="number"
+                          value={editingFuelType.discountPrice}
+                          onChange={(e) => setEditingFuelType({ ...editingFuelType, discountPrice: parseInt(e.target.value) || 0 })}
+                          className="bg-gray-700 border-gray-600 w-24"
+                        />
+                      </td>
+                      <td className="p-4 flex gap-2">
+                        <Button size="sm" onClick={() => updateFuelTypeMutation.mutate(editingFuelType)} className="bg-primary text-black">Save</Button>
+                        <Button size="sm" variant="ghost" onClick={() => setEditingFuelType(null)}>Cancel</Button>
+                      </td>
+                    </tr>
+                  ) : (
+                    <tr key={fuel.id} className="border-t border-gray-800" data-testid={`row-fuel-${fuel.id}`}>
+                      <td className="p-4 font-mono">{fuel.id}</td>
+                      <td className="p-4 font-bold">{fuel.name}</td>
+                      <td className="p-4">{stationsList.find(s => s.id === fuel.stationId)?.name || fuel.stationId}</td>
+                      <td className="p-4 text-gray-400">{fuel.basePrice} UAH</td>
+                      <td className="p-4 text-primary font-bold">{fuel.discountPrice} UAH</td>
+                      <td className="p-4 flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setEditingFuelType(fuel)}
+                          className="text-blue-400 hover:text-blue-300"
+                          data-testid={`button-edit-fuel-${fuel.id}`}
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => deleteFuelTypeMutation.mutate(fuel.id)}
+                          className="text-red-400 hover:text-red-300"
+                          data-testid={`button-delete-fuel-${fuel.id}`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                  )
                 ))}
                 {fuelTypesList.length === 0 && (
                   <tr>
