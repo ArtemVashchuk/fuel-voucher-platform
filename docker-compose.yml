@@ -30,7 +30,7 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@admin-database:5432/fuel_db
       PORT: 4000
       SESSION_SECRET: change-me-in-production
-      GEMINI_API_KEY: AIzaSyAVES2FmcW_y6daIbeQ0OzYqjUqcbNqJQc
+      GEMINI_API_KEY: AIzaSyCmOLHg50FwpJTCvEg-2kUDyHWc7GZC1Cw
     ports:
       - "4000:4000"
     volumes:
