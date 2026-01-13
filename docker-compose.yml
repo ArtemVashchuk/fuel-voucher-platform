@@ -31,6 +31,9 @@ services:
       PORT: 4000
       SESSION_SECRET: change-me-in-production
       GEMINI_API_KEY: AIzaSyCmOLHg50FwpJTCvEg-2kUDyHWc7GZC1Cw
+      STRIPE_SECRET_KEY: sk_test_51SexbkPbEgMic3cbNoI1Et9bvCPQUkX8HM50WUbjnhcw4J0ydQmj6tTeaBZjztjYHcHuyg5DbmJNnUbVTLDKdQUg00Ia6zNYHa
+      STRIPE_PUBLISHABLE_KEY: pk_test_51SexbkPbEgMic3cbeGOr1lHu5Q5VPDJvSvAzE8egMbg4FpLtQNfmTQqSQddeJIg3FL4VChD2b7aKjd4ZRsSrLBGT005Sxm2daw
+      STRIPE_WEBHOOK_SECRET: whsec_placeholder_for_production
     ports:
       - "4000:4000"
     volumes:
