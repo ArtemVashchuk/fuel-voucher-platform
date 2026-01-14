@@ -6,9 +6,9 @@ services:
     container_name: fuel-admin-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: fuel_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -26,14 +26,14 @@ services:
     container_name: fuel-admin-backend
     restart: unless-stopped
     environment:
-      NODE_ENV: development
-      DATABASE_URL: postgresql://postgres:postgres@admin-database:5432/fuel_db
-      PORT: 4000
-      SESSION_SECRET: change-me-in-production
-      GEMINI_API_KEY: AIzaSyCmOLHg50FwpJTCvEg-2kUDyHWc7GZC1Cw
-      STRIPE_SECRET_KEY: sk_test_51SexbkPbEgMic3cbNoI1Et9bvCPQUkX8HM50WUbjnhcw4J0ydQmj6tTeaBZjztjYHcHuyg5DbmJNnUbVTLDKdQUg00Ia6zNYHa
-      STRIPE_PUBLISHABLE_KEY: pk_test_51SexbkPbEgMic3cbeGOr1lHu5Q5VPDJvSvAzE8egMbg4FpLtQNfmTQqSQddeJIg3FL4VChD2b7aKjd4ZRsSrLBGT005Sxm2daw
-      STRIPE_WEBHOOK_SECRET: whsec_placeholder_for_production
+      NODE_ENV: ${NODE_ENV}
+      DATABASE_URL: ${DATABASE_URL}
+      PORT: ${PORT}
+      SESSION_SECRET: ${SESSION_SECRET}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
     ports:
       - "4000:4000"
     volumes:
