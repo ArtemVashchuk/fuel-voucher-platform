@@ -1,4 +1,5 @@
 using FuelFlow.Features.Auth.SendCode.Abstractions;
+using FuelFlow.Features.Auth.SendCode.Services;
 using FuelFlow.SharedKernel.Abstractions;
 using FuelFlow.Features.Auth.SharedModels;
 using FuelFlow.Persistence;
@@ -45,7 +46,7 @@ public sealed class SendCodeCommandHandler
             existingCode.IsUsed = true;
         }
 
-        var code = _environment.IsDevelopment() ? "000000" : GenerateCode();
+        var code = _smsService is FakeSmsService ? "000000" : GenerateCode();
         var verificationCode = new VerificationCode
         {
             Id = Guid.NewGuid(),
