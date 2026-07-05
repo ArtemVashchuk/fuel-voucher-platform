@@ -233,7 +233,7 @@ public sealed class AdminVoucherController : ControllerBase
         return Ok(new { success = true, count = entities.Count });
     }
 
-    private string? GenerateQrImage(string? qrPayload, FuelFlow.Persistence.Entities.QrParameters? qrParams)
+    private string? GenerateQrImage(string? qrPayload, QrParameters? qrParams)
     {
         if (string.IsNullOrWhiteSpace(qrPayload))
             return null;

@@ -34,6 +34,9 @@ public sealed class QrGenerator : IQrGenerator
         if (version is >= 1 and <= 40)
             options.Hints[EncodeHintType.QR_VERSION] = version.Value;
 
+        if (maskPattern is >= 0 and <= 7)
+            options.Hints[EncodeHintType.QR_MASK_PATTERN] = maskPattern.Value;
+
         // When the original QR used byte encoding, force byte mode so ZXing does not
         // silently upgrade to a more compact mode and change the QR structure.
         // DISABLE_ECI prevents ZXing from prepending an ECI designator, which would
