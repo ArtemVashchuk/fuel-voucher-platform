@@ -1424,7 +1424,7 @@ export default function AdminScreen() {
                           <td className="p-4" onClick={() => setSelectedQrId(v.id)}>
                             {qrData ? (
                               <div className="cursor-pointer hover:scale-105 transition-transform bg-white/5 p-1 rounded-md w-fit border border-gray-700">
-                                <img src={`${QR_BASE}/api/vouchers/${v.id}/qr?width=32&height=32`} alt="QR" style={{ width: 32, height: 32, imageRendering: 'pixelated' }} />
+                                <img src={v.qrImage} alt="QR" style={{ width: 32, height: 32, imageRendering: 'pixelated' }} />
                               </div>
                             ) : (
                               <div className="w-8 h-8 bg-gray-800/50 rounded animate-pulse" />
@@ -1580,7 +1580,7 @@ export default function AdminScreen() {
             ) : (
               <>
                 <div className="w-full h-64 bg-white flex items-center justify-center mb-4 rounded-lg border-2 border-dashed border-gray-200">
-                  <img src={`${QR_BASE}/api/vouchers/${selectedQrId}/qr?width=200&height=200`} alt="QR" style={{ width: 200, height: 200, imageRendering: 'pixelated' }} />
+                  <img src={fullVoucherData?.qrImage} alt="QR" style={{ width: 200, height: 200, imageRendering: 'pixelated' }} />
                 </div>
                 <p className="font-mono text-xs break-all text-gray-500 mb-4 bg-gray-100 p-2 rounded">{fullVoucherData?.qrPayload}</p>
               </>
