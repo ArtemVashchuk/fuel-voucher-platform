@@ -457,6 +457,9 @@ export default function AdminScreen() {
         return;
       }
 
+      const finalString = value.endsWith('\n') ? value : value + '\n';
+      const segments: any[] = [{ data: finalString, mode: 'byte' }];
+
       const opts: any = {
         margin: 0,
         width: size,
@@ -480,16 +483,12 @@ export default function AdminScreen() {
         opts.maskPattern = 5;
       }
 
-      if (isWog) {
-        const finalString = value.endsWith('\n') ? value : value + '\n';
-        QRCode.toDataURL([{ data: finalString, mode: 'byte' }], opts)
-          .then(setDataUrl)
-          .catch((err: any) => { console.error("QR Generation Error:", err); setDataUrl(null); });
-      } else {
-        QRCode.toDataURL(value, opts)
-          .then(setDataUrl)
-          .catch((err: any) => { console.error("QR Generation Error:", err); setDataUrl(null); });
-      }
+      QRCode.toDataURL(segments, opts)
+        .then(setDataUrl)
+        .catch((err: any) => {
+          console.error("QR Generation Error:", err);
+          setDataUrl(null);
+        });
     }, [value, size, isWog, imageUrl, qrParameters?.eccLevel, qrParameters?.version, qrParameters?.maskPattern]);
 
     if (imageUrl) {
