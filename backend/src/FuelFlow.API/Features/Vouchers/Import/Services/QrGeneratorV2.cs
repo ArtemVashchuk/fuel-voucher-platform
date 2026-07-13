@@ -53,6 +53,14 @@ public sealed class QrGeneratorV2 : IQrGenerator
 
     private static List<QrSegment> BuildSegments(string payload, string? encodingMode)
     {
+        // Use the stored encoding mode - WOG vouchers use BYTE mode for all digits
+        if (string.IsNullOrEmpty(encodingMode))
+        {
+            // No mode stored - use BYTE mode (matches the WOG PDF generator)
+            var bytes = Encoding.Latin1.GetBytes(payload);
+            return new List<QrSegment> { QrSegment.MakeBytes(bytes) };
+        }
+
         if (string.Equals(encodingMode, "BYTE", StringComparison.OrdinalIgnoreCase))
         {
             // ISO-8859-1 (Latin-1) matches the original BYTE-mode encoding used by OKKO/WOG.
@@ -66,8 +74,9 @@ public sealed class QrGeneratorV2 : IQrGenerator
         if (string.Equals(encodingMode, "ALPHANUMERIC", StringComparison.OrdinalIgnoreCase))
             return new List<QrSegment> { QrSegment.MakeAlphanumeric(payload) };
 
-        // No mode stored — let the library auto-select the most compact representation.
-        return QrSegment.MakeSegments(payload);
+        // Unknown mode - fallback to BYTE mode (WOG PDF generator uses BYTE mode for digits)
+        var fallbackBytes = Encoding.Latin1.GetBytes(payload);
+        return new List<QrSegment> { QrSegment.MakeBytes(fallbackBytes) };
     }
 
     private static string RenderToPngBase64(QrCode qr, int width, int height)
