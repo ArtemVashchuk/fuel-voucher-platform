@@ -83,13 +83,19 @@ public sealed class QrGeneratorV2 : IQrGenerator
     {
         // Compute scale so the full QR symbol (data + quiet zone) fits in the canvas.
         int totalModules = qr.Size + Margin * 2;
-        int scale = Math.Max(1, Math.Min(width, height) / totalModules);
+        
+        // Use ceiling for scaling to prevent truncation off-by-one errors
+        double scaleFactor = (double)Math.Max(1, Math.Min(width, height)) / totalModules;
+        int scale = (int)Math.Ceiling(scaleFactor);
+        
+        // Calculate effective dimensions with proper scaling
+        int scaledWidth = totalModules * scale;
+        int scaledHeight = totalModules * scale;
 
         // Pixel coordinate of module (0,0) top-left corner.
-        // The remaining space after fitting the scaled QR is split evenly on both sides,
-        // so the quiet zone is centered rather than pushed to bottom-right.
-        int moduleStartX = (width  - totalModules * scale) / 2 + Margin * scale;
-        int moduleStartY = (height - totalModules * scale) / 2 + Margin * scale;
+        // Use integer division that's less prone to floating-point precision issues
+        int moduleStartX = ((width - scaledWidth) + 1) / 2 + Margin * scale;
+        int moduleStartY = ((height - scaledHeight) + 1) / 2 + Margin * scale;
 
         var black = new Rgba32(0, 0, 0, 255);
         var white = new Rgba32(255, 255, 255, 255);
