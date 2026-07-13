@@ -25,13 +25,6 @@ public sealed class WogVoucherParser : IVoucherProviderParser
         @"\b(?<fuel>[АA]\s*[-–—]?\s*\d{2,3}(?:\s*\+)?|Д\s*[ПP]|ГАЗ)\b",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-    // Extra pixel padding applied to QR crop regions.
-    // The ZXing HybridBinarizer and Detector need a small amount of quiet-zone context
-    // around the QR code to compute accurate module-level binarization thresholds and
-    // perspective transforms.  Without it, edge modules — especially at (x=0) — can be
-    // mis-sampled, causing spurious bit verification mismatches.
-    private const int QrCropPadding = 6;
-
     public bool CanParse(ProviderDetectionContext context)
     {
         return context.Words.Any(w =>
@@ -69,8 +62,7 @@ public sealed class WogVoucherParser : IVoucherProviderParser
             QrDecodeResult qrResult = new();
             try
             {
-                var firstCrop = PadCrop(region.Bounds, context.PageRender.Image);
-                using var croppedImage = context.PageRender.Image.Clone(x => x.Crop(firstCrop));
+                using var croppedImage = context.PageRender.Image.Clone(x => x.Crop(region.Bounds));
                 qrResult = context.QrDecoder.Decode(croppedImage);
                 qrPayload = qrResult.Text;
             }
@@ -149,25 +141,16 @@ public sealed class WogVoucherParser : IVoucherProviderParser
         return await Task.FromResult(parsedVouchers);
     }
 
-    private static Rectangle PadCrop(Rectangle bounds, Image pageImage)
-    {
-        var x = Math.Max(0, bounds.X - QrCropPadding);
-        var y = Math.Max(0, bounds.Y - QrCropPadding);
-        var w = Math.Min(pageImage.Width - x, bounds.Width + QrCropPadding * 2);
-        var h = Math.Min(pageImage.Height - y, bounds.Height + QrCropPadding * 2);
-        return new Rectangle(x, y, w, h);
-    }
-
     private static Rectangle ExpandBounds(Rectangle bounds, Image pageImage)
     {
         // The WOG QR code is always in the top-right corner of the voucher cell.
         // Neighbours below and on the sides must not bleed in, so we expand upward only.
         // Padding = half the cell height gives the Detector enough quiet-zone headroom.
         var padding = bounds.Height / 2;
-        var x = Math.Max(0, bounds.X - QrCropPadding);       // pad left for binarizer edge context
-        var y = Math.Max(0, bounds.Y - padding);             // expand upward only
-        var w = Math.Min(pageImage.Width - x, bounds.Width + QrCropPadding); // correct for left shift
-        var h = bounds.Bottom - y;                           // bottom edge stays fixed
+        var x = bounds.X;                                  // left edge stays fixed
+        var y = Math.Max(0, bounds.Y - padding);           // expand upward only
+        var w = Math.Min(pageImage.Width - x, bounds.Width); // width unchanged
+        var h = bounds.Bottom - y;                         // bottom edge stays fixed
         return new Rectangle(x, y, w, h);
     }
 
