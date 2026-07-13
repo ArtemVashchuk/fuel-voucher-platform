@@ -1,7 +1,4 @@
-using System.Collections.Generic;
-using ZXing;
-using ZXing.Common;
-using ZXing.QrCode.Internal;
+using Net.Codecrete.QrCodeGenerator;
 
 namespace FuelFlow.Features.Vouchers.Import;
 
@@ -27,6 +24,16 @@ public static class QrMatrixVerifier
         public string? SkipReason { get; init; }
     }
 
+    /// <summary>
+    /// Regenerates a QR code using the stored parameters and compares its module grid
+    /// against the original matrix extracted from the PDF image during decoding.
+    ///
+    /// Returns:
+    ///   Passed  — 0–1 % mismatch   → status: Imported
+    ///   Warning — 1–2 % mismatch   → status: VerifiedWithWarnings
+    ///   Failed  —  >2 % mismatch   → status: VerificationFailed
+    ///   Skipped — original matrix unavailable (parameters could not be extracted)
+    /// </summary>
     public static VerificationDetails Verify(
         string payload,
         bool[,]? originalMatrix,
@@ -41,10 +48,10 @@ public static class QrMatrixVerifier
         if (version == null || maskPattern == null)
             return new VerificationDetails { Result = VerificationResult.Skipped, SkipReason = "Version or mask pattern not extracted" };
 
-        bool[,] regenerated;
+        QrCode regenerated;
         try
         {
-            regenerated = GenerateMatrixZxing(payload, eccLevel ?? "L", version.Value, maskPattern.Value, encodingMode);
+            regenerated = QrGeneratorV2.BuildQrCode(payload, eccLevel, version, encodingMode, maskPattern);
         }
         catch (Exception ex)
         {
@@ -54,57 +61,27 @@ public static class QrMatrixVerifier
         return CompareModules(originalMatrix, regenerated);
     }
 
-    private static bool[,] GenerateMatrixZxing(
-        string payload, string eccLevel, int version, int maskPattern, string? encodingMode)
+    private static VerificationDetails CompareModules(bool[,] originalMatrix, QrCode regenerated)
     {
-        var ecLevel = eccLevel switch
-        {
-            "L" => ErrorCorrectionLevel.L,
-            "M" => ErrorCorrectionLevel.M,
-            "Q" => ErrorCorrectionLevel.Q,
-            "H" => ErrorCorrectionLevel.H,
-            _ => ErrorCorrectionLevel.L
-        };
+        int originalDim = originalMatrix.GetLength(0);
 
-        var hints = new Dictionary<EncodeHintType, object>
-        {
-            { EncodeHintType.QR_VERSION, version },
-            { EncodeHintType.QR_MASK_PATTERN, maskPattern },
-            { EncodeHintType.CHARACTER_SET, "UTF-8" }
-        };
-
-        var qrCode = Encoder.encode(payload, ecLevel, hints);
-        var matrix = qrCode.Matrix;
-        int dim = matrix.Width;
-        var result = new bool[dim, dim];
-        for (int x = 0; x < dim; x++)
-            for (int y = 0; y < dim; y++)
-                result[x, y] = matrix[x, y] == 1;
-
-        return result;
-    }
-
-    private static VerificationDetails CompareModules(bool[,] original, bool[,] regenerated)
-    {
-        int dim = original.GetLength(0);
-
-        if (dim != regenerated.GetLength(0))
+        if (originalDim != regenerated.Size)
             return new VerificationDetails
             {
                 Result = VerificationResult.Failed,
                 MismatchPercent = 100,
-                MismatchedModules = dim * dim,
-                TotalModules = dim * dim,
-                SkipReason = $"Size mismatch: original={dim} regenerated={regenerated.GetLength(0)}"
+                MismatchedModules = originalDim * originalDim,
+                TotalModules = originalDim * originalDim,
+                SkipReason = $"Size mismatch: original={originalDim} regenerated={regenerated.Size}"
             };
 
         int mismatched = 0;
-        int total = dim * dim;
+        int total = originalDim * originalDim;
         (int X, int Y) firstMismatch = (-1, -1);
 
-        for (int x = 0; x < dim; x++)
-            for (int y = 0; y < dim; y++)
-                if (original[x, y] != regenerated[x, y])
+        for (int x = 0; x < originalDim; x++)
+            for (int y = 0; y < originalDim; y++)
+                if (originalMatrix[x, y] != regenerated.GetModule(x, y))
                 {
                     mismatched++;
                     if (firstMismatch.X == -1)
@@ -122,9 +99,9 @@ public static class QrMatrixVerifier
         if (mismatched > 0)
         {
             Console.WriteLine(
-                $"[QrMatrixVerifier] Version={dim} " +
+                $"[QrMatrixVerifier] Version={regenerated.Size} " +
                 $"Mismatches={mismatched}/{total} First mismatch at (x={firstMismatch.X}, y={firstMismatch.Y}) " +
-                $"original={original[firstMismatch.X, firstMismatch.Y]} regenerated={regenerated[firstMismatch.X, firstMismatch.Y]}");
+                $"original={originalMatrix[firstMismatch.X, firstMismatch.Y]} regenerated={regenerated.GetModule(firstMismatch.X, firstMismatch.Y)}");
         }
 
         return new VerificationDetails
