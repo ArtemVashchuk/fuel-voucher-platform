@@ -102,6 +102,26 @@ public static class QrMatrixVerifier
                 $"[QrMatrixVerifier] Version={regenerated.Size} " +
                 $"Mismatches={mismatched}/{total} First mismatch at (x={firstMismatch.X}, y={firstMismatch.Y}) " +
                 $"original={originalMatrix[firstMismatch.X, firstMismatch.Y]} regenerated={regenerated.GetModule(firstMismatch.X, firstMismatch.Y)}");
+
+            // Dump column 0 for both matrices to diagnose systematic edge shifts.
+            Console.Write("[QrMatrixVerifier] Column-0 original: ");
+            for (int y = 0; y < originalDim; y++)
+                Console.Write(originalMatrix[0, y] ? "1" : "0");
+            Console.WriteLine();
+            Console.Write("[QrMatrixVerifier] Column-0 re-generated: ");
+            for (int y = 0; y < originalDim; y++)
+                Console.Write(regenerated.GetModule(0, y) ? "1" : "0");
+            Console.WriteLine();
+
+            // Dump row 17 for both matrices to check for horizontal shift.
+            Console.Write("[QrMatrixVerifier] Row-17    original: ");
+            for (int x = 0; x < originalDim; x++)
+                Console.Write(originalMatrix[x, 17] ? "1" : "0");
+            Console.WriteLine();
+            Console.Write("[QrMatrixVerifier] Row-17    re-generated: ");
+            for (int x = 0; x < originalDim; x++)
+                Console.Write(regenerated.GetModule(x, 17) ? "1" : "0");
+            Console.WriteLine();
         }
 
         return new VerificationDetails
